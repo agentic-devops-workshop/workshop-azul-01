@@ -51,20 +51,12 @@ O que NÃO conta: paginação de relatório, formatação de saída, manipulaç�
  | BR-003 | O nome do beneficiário não pode ser vazio e deve conter pelo menos um espaço (nome e sobrenome). | 01-arqueologia/legado-sifap/natural-programs/VALBENEF.NSN#L136-L154 | BENEFICIARIO.NOME | MÉDIO | Evita cadastros incompletos. |
  | BR-004 | Se informado, o campo UF do beneficiário deve estar entre as 27 siglas válidas de estados brasileiros. | 01-arqueologia/legado-sifap/natural-programs/VALBENEF.NSN#L156-L175 | BENEFICIARIO.UF | MÉDIO | Validação de domínio de UF. |
  | BR-005 | O status do beneficiário deve ser um dos seguintes: 'A', 'S', 'C', 'I', 'D'. | 01-arqueologia/legado-sifap/natural-programs/VALBENEF.NSN#L177-L182 | BENEFICIARIO.STATUS | MÉDIO | Controle de status permitido. |
- | BR-006 | Se o CPF informado for zero ou falhar no cálculo dos dígitos verificadores, a validação documental deve retornar inválida. | 01-arqueologia/legado-sifap/natural-programs/VALDOCS.NSN#L100-L142 | BENEFICIARIO.CPF | ALTO | Regra de consistência cadastral no fluxo de documentos. |
- | BR-007 | O RG é inválido quando estiver em branco ou com menos de 5 caracteres úteis. | 01-arqueologia/legado-sifap/natural-programs/VALDOCS.NSN#L146-L162 | BENEFICIARIO.RG | MÉDIO | Regra mínima de formato de identificação civil. |
- | BR-008 | Se o prefixo do CPF estiver em uma lista especial (000, 001, 002, 010, 011, 099, 100, 999), o sistema marca documentação especial como válida, força resultado válido e zera erros acumulados. | 01-arqueologia/legado-sifap/natural-programs/VALDOCS.NSN#L37-L44; 01-arqueologia/legado-sifap/natural-programs/VALDOCS.NSN#L168-L181 | BENEFICIARIO.CPF, BENEFICIARIO.DOCUMENTOS-OK | ALTO | Exceção de negócio para governo/teste; sobrescreve falhas anteriores. |
- | BR-009 | Se o beneficiário não for encontrado pelo CPF, o processo de elegibilidade deve ser encerrado imediatamente. | 01-arqueologia/legado-sifap/natural-programs/VALELEG.NSN#L70-L84 | BENEFICIARIO.CPF | ALTO | Hard stop por ausência cadastral. |
- | BR-010 | Se o programa social não for encontrado pelo código, o processo deve ser encerrado imediatamente. | 01-arqueologia/legado-sifap/natural-programs/VALELEG.NSN#L88-L97 | PROGRAMA-SOCIAL.COD-PROGRAMA | ALTO | Hard stop por ausência de programa. |
- | BR-011 | Apenas programas com status 'A' (ativo) podem conceder elegibilidade. | 01-arqueologia/legado-sifap/natural-programs/VALELEG.NSN#L99-L102 | PROGRAMA-SOCIAL.STATUS-PROG | ALTO | Programa inativo bloqueia análise. |
- | BR-012 | Beneficiário da região 99 é elegível automaticamente por regra especial e encerra o processamento. | 01-arqueologia/legado-sifap/natural-programs/VALELEG.NSN#L107-L111 | BENEFICIARIO.COD-REGIAO | ALTO | Exceção explícita internacional/diplomático. |
- | BR-013 | Beneficiário com status diferente de 'A' é inelegível, com motivo específico: 'S' suspenso, 'C'/'D' cancelado-desligado, 'I' inativo. | 01-arqueologia/legado-sifap/natural-programs/VALELEG.NSN#L116-L134 | BENEFICIARIO.STATUS | ALTO | Regras de bloqueio por ciclo de vida cadastral. |
- | BR-014 | Quando definidos, limites de idade mínima e máxima do programa devem ser respeitados; idade fora da faixa torna o beneficiário inelegível. | 01-arqueologia/legado-sifap/natural-programs/VALELEG.NSN#L139-L152 | PROGRAMA-SOCIAL.IDADE-MIN, PROGRAMA-SOCIAL.IDADE-MAX, BENEFICIARIO.DT-NASCIMENTO | ALTO | Validação etária parametrizada por programa. |
- | BR-015 | Quando definido teto de renda no programa, renda familiar acima do teto torna o beneficiário inelegível. | 01-arqueologia/legado-sifap/natural-programs/VALELEG.NSN#L157-L163 | PROGRAMA-SOCIAL.RENDA-MAX, BENEFICIARIO.RENDA-FAMILIAR | CRÍTICO | Regra financeira de corte de elegibilidade. |
- | BR-016 | Para programa do tipo assistencial ('A'): se renda > 600 e não houver dependentes, o beneficiário é inelegível; além disso, documentação deve estar completa (DOCUMENTOS-OK = 'S'). | 01-arqueologia/legado-sifap/natural-programs/VALELEG.NSN#L168-L182 | PROGRAMA-SOCIAL.TIPO, BENEFICIARIO.RENDA-FAMILIAR, BENEFICIARIO.NUM-DEPENDENTES, BENEFICIARIO.DOCUMENTOS-OK | ALTO | Combina critério socioeconômico e exigência documental. |
- | BR-017 | Para programa previdenciário ('P'), idade mínima de 60 anos é obrigatória. | 01-arqueologia/legado-sifap/natural-programs/VALELEG.NSN#L183-L189 | PROGRAMA-SOCIAL.TIPO, BENEFICIARIO.DT-NASCIMENTO | ALTO | Regra de elegibilidade por faixa etária fixa. |
- | BR-018 | Para programa de trabalho ('T'), idade permitida é de 16 a 65 anos; tipo de programa desconhecido torna o beneficiário inelegível. | 01-arqueologia/legado-sifap/natural-programs/VALELEG.NSN#L190-L201 | PROGRAMA-SOCIAL.TIPO, BENEFICIARIO.DT-NASCIMENTO | ALTO | Inclui validação de domínio do tipo de programa. |
- | BR-019 | Se o código de elegibilidade tiver 'R' na 1ª posição, NIS cadastrado é obrigatório; se tiver 'D' na 2ª posição, pelo menos um dependente é obrigatório. | 01-arqueologia/legado-sifap/natural-programs/VALELEG.NSN#L226-L241 | PROGRAMA-SOCIAL.COD-ELEGIBILIDADE, BENEFICIARIO.NIS, BENEFICIARIO.NUM-DEPENDENTES | ALTO | Regras condicionais compostas por flags no código de elegibilidade. |
+ | BR-006 | Se o CPF for inválido após validação de dígitos verificadores, o sistema deve marcar resultado inválido e registrar erro CPF INVALIDO. | 01-arqueologia/legado-sifap/natural-programs/VALDOCS.NSN#L68; 01-arqueologia/legado-sifap/natural-programs/VALDOCS.NSN#L69; 01-arqueologia/legado-sifap/natural-programs/VALDOCS.NSN#L102; 01-arqueologia/legado-sifap/natural-programs/VALDOCS.NSN#L123; 01-arqueologia/legado-sifap/natural-programs/VALDOCS.NSN#L140 | BENEFICIARIO.CPF | ALTO | EARS: Unwanted. Classificação: Inferida. Observação: Algoritmo de CPF implementado em duas etapas de DV. |
+ | BR-007 | Se RG estiver em branco ou com menos de 5 caracteres úteis, o sistema deve invalidar RG. | 01-arqueologia/legado-sifap/natural-programs/VALDOCS.NSN#L78; 01-arqueologia/legado-sifap/natural-programs/VALDOCS.NSN#L79; 01-arqueologia/legado-sifap/natural-programs/VALDOCS.NSN#L148; 01-arqueologia/legado-sifap/natural-programs/VALDOCS.NSN#L160 | BENEFICIARIO.RG | MÉDIO | EARS: Unwanted. Classificação: Inferida. Observação: Comprimento é calculado pelo primeiro espaço encontrado. |
+ | BR-008 | Quando o prefixo do CPF estiver na lista especial, o sistema deve validar o documento especial, forçar resultado válido e limpar erros acumulados. | 01-arqueologia/legado-sifap/natural-programs/VALDOCS.NSN#L41; 01-arqueologia/legado-sifap/natural-programs/VALDOCS.NSN#L88; 01-arqueologia/legado-sifap/natural-programs/VALDOCS.NSN#L174 | BENEFICIARIO.CPF, BENEFICIARIO.DOCUMENTOS-OK | ALTO | EARS: Event-driven. Classificação: Inferida. Observação: Regra de override, prevalece sobre falhas anteriores de CPF/RG. |
+ | BR-009 | Se houver documento especial válido, o sistema deve exibir mensagem específica de validação especial. | 01-arqueologia/legado-sifap/natural-programs/VALDOCS.NSN#L95 | BENEFICIARIO.CPF | BAIXO | EARS: Optional. Classificação: Inferida. Observação: Saída adicional, não altera mais validações nesse ponto. |
+ | BR-010 | O resultado final inicia como válido e só é alterado para inválido quando alguma validação falha, exceto no override de documento especial. | 01-arqueologia/legado-sifap/natural-programs/VALDOCS.NSN#L35; 01-arqueologia/legado-sifap/natural-programs/VALDOCS.NSN#L71; 01-arqueologia/legado-sifap/natural-programs/VALDOCS.NSN#L81; 01-arqueologia/legado-sifap/natural-programs/VALDOCS.NSN#L177 | BENEFICIARIO.CPF, BENEFICIARIO.RG | ALTO | EARS: State-driven. Classificação: Inferida. Observação: Fluxo de estado claro com exceção explícita. |
+ | BR-011 | Para cálculo dos dígitos do CPF, quando resto da divisão por 11 for menor que 2, o DV calculado deve ser 0. | 01-arqueologia/legado-sifap/natural-programs/VALDOCS.NSN#L118; 01-arqueologia/legado-sifap/natural-programs/VALDOCS.NSN#L135 | BENEFICIARIO.CPF | MÉDIO | EARS: Ubiquitous. Classificação: Inferida. Observação: Regra matemática padrão do algoritmo no código. |
 
 
 > Adicione mais linhas conforme necessário. Lembre-se: existem **10 regras escondidas** no código!
@@ -79,33 +71,28 @@ O que NÃO conta: paginação de relatório, formatação de saída, manipulaç�
 
 ### Cálculos Financeiros
 
-- BR-015: Quando definido teto de renda no programa, renda familiar acima do teto torna o beneficiário inelegível.
-- BR-016: Para programa assistencial, renda acima de 600 sem dependentes bloqueia elegibilidade.
+- Nenhuma regra financeira adicional identificada neste recorte.
 
 ### Validações de Status
 
 - BR-005: O status do beneficiário deve ser um dos seguintes: 'A', 'S', 'C', 'I', 'D'.
-- BR-011: Apenas programas com status 'A' (ativo) podem conceder elegibilidade.
-- BR-013: Beneficiário com status diferente de 'A' é inelegível, com motivo específico por status.
+- BR-010: O resultado final inicia como válido e é alterado para inválido quando há falha de validação, exceto override por documento especial.
 
 ### Regras de Autorização
 
-- BR-012: Beneficiário da região 99 recebe elegibilidade automática por exceção de negócio.
-- BR-019: Flags no código de elegibilidade exigem NIS e/ou dependentes.
+- BR-008: Prefixo especial de CPF ativa override de validação documental.
 
 ### Regras de Negócio Temporais
 
 - BR-002: A data de nascimento do beneficiário deve ser válida: ano entre 1900 e o ano atual, mês entre 1 e 12, dia compatível com o mês (considerando ano bissexto para fevereiro).
-- BR-014: Idade mínima e máxima parametrizadas por programa devem ser respeitadas.
-- BR-017: Programa previdenciário exige idade mínima de 60 anos.
-- BR-018: Programa de trabalho exige idade entre 16 e 65 anos.
+- BR-011: No cálculo de dígitos do CPF, quando o resto da divisão por 11 for menor que 2, o DV deve ser 0.
 
 ## Resumo Estatístico
 
-- Total de regras encontradas: 19
-- Regras críticas: 1
+- Total de regras encontradas: 11
+- Regras críticas: 0
 - Regras com duplicação: 1 (BR-001 e BR-006 tratam validação de CPF em módulos distintos)
-- Regras sem documentação (escondidas): 3 (BR-008, BR-012, BR-019)
+- Regras sem documentação (escondidas): 1 (BR-008)
 
 ---
 

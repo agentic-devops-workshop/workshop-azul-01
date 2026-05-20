@@ -44,9 +44,9 @@
 
 | ID      | Descrição | Onde Encontrado | Impacto Potencial | Confiança |
 | ------- | --------- | --------------- | ----------------- | --------- |
-| MYS-001 |           |                 |                   |           |
-| MYS-002 |           |                 |                   |           |
-| MYS-003 |           |                 |                   |           |
+| MYS-001 | A regra de documento especial limpa todos os erros e força válido. Precisa confirmar com negócio se isso deve ignorar também falha de RG, ou apenas flexibilizar CPF. | 01-arqueologia/legado-sifap/natural-programs/VALDOCS.NSN#L176; 01-arqueologia/legado-sifap/natural-programs/VALDOCS.NSN#L178 | Pode aprovar cadastro com inconsistências de documento. | **ALTA** |
+| MYS-002 | TITULO e CTPS são coletados na entrada, mas não entram em nenhuma validação neste programa. Pode haver validação externa ou requisito incompleto. | 01-arqueologia/legado-sifap/natural-programs/VALDOCS.NSN#L52 | Regras de documento podem ficar incompletas na migração. | **ALTA** |
+| MYS-003 | Lista de prefixos especiais contém valores aparentemente administrativos/teste sem documentação funcional no código. | 01-arqueologia/legado-sifap/natural-programs/VALDOCS.NSN#L41 | Pode manter exceções indevidas ou quebrar cenários especiais. | **MÉDIA** |
 | MYS-004 |           |                 |                   |           |
 | MYS-005 |           |                 |                   |           |
 | MYS-006 |           |                 |                   |           |
@@ -57,19 +57,53 @@
 
 ## Detalhamento dos Mistérios
 
-### MYS-001: [Título do Mistério]
+### MYS-001: Documento especial sobrescreve erros
 
-- **Arquivo**: `01-arqueologia/legado-sifap/natural-programs/ARQUIVO.NSN#L<inicio>-L<fim>`
+- **Arquivo**: `01-arqueologia/legado-sifap/natural-programs/VALDOCS.NSN#L176-L179`
 - **Trecho de código**:
 
 ```natural
-* Cole aqui o trecho relevante
+MOVE 'V' TO #RESULTADO
+MOVE 0 TO #QTD-ERROS
 ```
 
-- **O que esperávamos**: [comportamento esperado]
-- **O que o código faz**: [comportamento real]
-- **Hipótese do time**: [melhor palpite]
-- **Risco se ignorarmos**: [o que pode dar errado na migração]
+- **O que esperávamos**: confirmação de quais validações podem ser flexibilizadas.
+- **O que o código faz**: força o resultado para válido e apaga erros acumulados.
+- **Hipótese do time**: regra histórica para casos especiais de cadastro.
+- **Risco se ignorarmos**: aprovação incorreta de beneficiários sem critérios claros.
+
+---
+
+### MYS-002: TITULO e CTPS sem validação
+
+- **Arquivo**: `01-arqueologia/legado-sifap/natural-programs/VALDOCS.NSN#L52`
+- **Trecho de código**:
+
+```natural
+'TITULO ELEITOR:' #TITULO /
+'CTPS..........:' #CTPS
+```
+
+- **O que esperávamos**: regras explícitas para validar os dois documentos.
+- **O que o código faz**: coleta/exibe os campos, sem aplicar validação.
+- **Hipótese do time**: validação pode existir em outro programa ou ter sido removida.
+- **Risco se ignorarmos**: perda de requisitos de conformidade documental.
+
+---
+
+### MYS-003: Prefixos especiais sem documentação
+
+- **Arquivo**: `01-arqueologia/legado-sifap/natural-programs/VALDOCS.NSN#L41`
+- **Trecho de código**:
+
+```natural
+1 #PREF-ESP            (A3/8)
+```
+
+- **O que esperávamos**: documentação funcional justificando os prefixos especiais.
+- **O que o código faz**: define e usa lista fixa de prefixos sem contexto de negócio no código.
+- **Hipótese do time**: códigos administrativos/teste legados.
+- **Risco se ignorarmos**: comportamento divergente em produção e homologação.
 
 ---
 
@@ -85,10 +119,10 @@
 
 ## Resumo
 
-- Total de mistérios encontrados: \_\_\_
-- Confiança alta: \_\_\_
-- Confiança média: \_\_\_
-- Confiança baixa: \_\_\_
+- Total de mistérios encontrados: 3
+- Confiança alta: 2
+- Confiança média: 1
+- Confiança baixa: 0
 - Easter eggs encontrados: \_\_\_ / 3
 
 ---
