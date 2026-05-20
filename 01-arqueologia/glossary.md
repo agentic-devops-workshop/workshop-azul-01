@@ -39,38 +39,28 @@ Prompt útil no Copilot Chat (cole o conteúdo de 2–3 arquivos `.NSN` no chat 
 
 ## Termos encontrados
 
-| #   | Termo | Expansão | Programa | Contexto |
-| --- | ----- | -------- | -------- | -------- |
-| 1   |       |          |          |          |
-| 2   |       |          |          |          |
-| 3   |       |          |          |          |
-| 4   |       |          |          |          |
-| 5   |       |          |          |          |
-| 6   |       |          |          |          |
-| 7   |       |          |          |          |
-| 8   |       |          |          |          |
-| 9   |       |          |          |          |
-| 10  |       |          |          |          |
-| 11  |       |          |          |          |
-| 12  |       |          |          |          |
-| 13  |       |          |          |          |
-| 14  |       |          |          |          |
-| 15  |       |          |          |          |
-| 16  |       |          |          |          |
-| 17  |       |          |          |          |
-| 18  |       |          |          |          |
-| 19  |       |          |          |          |
-| 20  |       |          |          |          |
-| 21  |       |          |          |          |
-| 22  |       |          |          |          |
-| 23  |       |          |          |          |
-| 24  |       |          |          |          |
-| 25  |       |          |          |          |
-| 26  |       |          |          |          |
-| 27  |       |          |          |          |
-| 28  |       |          |          |          |
-| 29  |       |          |          |          |
-| 30  |       |          |          |          |
+| #  | Termo            | Expansão                                 | Programa                | Contexto/Comentário                                   |
+|----|------------------|------------------------------------------|-------------------------|------------------------------------------------------|
+| 1  | CPF              | Cadastro de Pessoa Física                | VALELEG, VALBENEF, VALDOCS | Documento de identificação nacional              |
+| 2  | NOME             | Nome completo                            | VALELEG, VALBENEF, VALDOCS | Nome do beneficiário                              |
+| 3  | DT-NASC          | Data de Nascimento                       | VALELEG, VALBENEF       | Data de nascimento                                 |
+| 4  | STATUS           | Status do Beneficiário                   | VALELEG, VALBENEF       | Situação cadastral ('A', 'S', 'C', etc.)           |
+| 5  | COD-PROGRAMA     | Código do Programa                       | VALELEG                 | Identificador do programa social                   |
+| 6  | RENDA-FAMILIAR   | Renda Familiar                           | VALELEG                 | Valor da renda familiar                            |
+| 7  | NUM-DEPENDENTES  | Número de Dependentes                    | VALELEG                 | Quantidade de dependentes                          |
+| 8  | COD-REGIAO       | Código da Região                         | VALELEG                 | Região administrativa                              |
+| 9  | UF               | Unidade Federativa                       | VALELEG, VALBENEF, VALDOCS | Estado brasileiro (ex: SP, RJ)                  |
+| 10 | NIS              | Número de Identificação Social           | VALELEG                 | Identificador social do beneficiário               |
+| 11 | DOCUMENTOS-OK    | Documentação Ok                          | VALELEG, VALDOCS        | Indica se a documentação está completa (HIPÓTESE)  |
+| 12 | TIPO             | Tipo de Programa                         | VALELEG                 | 'A' (Assistencial), 'P' (Previdenciário), 'T' (Trabalho) |
+| 13 | VLR-BASE         | Valor Base                               | VALELEG                 | Valor base do benefício                            |
+| 14 | COD-ELEGIBILIDADE| Código de Elegibilidade                  | VALELEG                 | Código de regra de elegibilidade                   |
+| 15 | STATUS-PROG      | Status do Programa                       | VALELEG                 | Situação do programa                               |
+| 16 | RENDA-MAX        | Renda Máxima                             | VALELEG                 | Teto de renda para elegibilidade                   |
+| 17 | IDADE-MIN        | Idade Mínima                             | VALELEG                 | Idade mínima para o programa                       |
+| 18 | IDADE-MAX        | Idade Máxima                             | VALELEG                 | Idade máxima para o programa                       |
+| 19 | RG               | Registro Geral                           | VALDOCS                 | Documento de identidade                            |
+| 20 | CTPS             | Carteira de Trabalho e Previdência Social| VALDOCS                 | Documento trabalhista                              |
 
 > Adicione mais linhas conforme necessário. Não se limite a 30!
 
