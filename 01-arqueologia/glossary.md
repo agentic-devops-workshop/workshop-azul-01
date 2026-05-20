@@ -39,45 +39,82 @@ Prompt útil no Copilot Chat (cole o conteúdo de 2–3 arquivos `.NSN` no chat 
 
 ## Termos encontrados
 
+> **Contribuição Par 2 (Arquitetura — EA + SA):** 30 termos extraídos dos 3 batches e DDMs relacionados.
+
 | #   | Termo | Expansão | Programa | Contexto |
 | --- | ----- | -------- | -------- | -------- |
-| 1   | `SIFAP` | Sistema de Fiscalização e Administração de Pagamentos | Todos | Nome do sistema legado completo |
-| 2   | `BENEF` | Beneficiário | `CONSBENF.NSN`, `RELPGT.NSN` | Pessoa física que recebe pagamento de programa social |
-| 3   | `CONSBENF` | Consulta Beneficiário | `CONSBENF.NSN` | Programa online de consulta cadastral via terminal 3270 |
-| 4   | `RELPGT` | Relatório de Pagamentos | `RELPGT.NSN` | Relatório analítico de pagamentos por período com totalizadores |
-| 5   | `RELAUDIT` | Relatório de Auditoria | `RELAUDIT.NSN` | Relatório da trilha de auditoria do sistema |
-| 6   | `CPF` | Cadastro de Pessoa Física | `CONSBENF.NSN`, `RELPGT.NSN` | Identificador único do beneficiário (N11) |
-| 7   | `NIS` | Número de Identificação Social | `CONSBENF.NSN` | Identificador alternativo de beneficiário, usado em busca |
-| 8   | `VLR-BRUTO` | Valor Bruto | `RELPGT.NSN`, `CONSBENF.NSN` | Valor total do pagamento antes de descontos (N9.2) |
-| 9   | `VLR-DESCONTO` | Valor Desconto | `RELPGT.NSN` | Valor total de deduções aplicadas ao pagamento |
-| 10  | `VLR-LIQUIDO` | Valor Líquido | `RELPGT.NSN`, `CONSBENF.NSN` | Valor efetivamente pago ao beneficiário (bruto − desconto) |
-| 11  | `VLR-ABONO` | Valor Abono | `RELPGT.NSN` | Valor de abono adicional ao pagamento, totalizado à parte |
-| 12  | `COMPETENCIA` | Competência (mês/ano) | `RELPGT.NSN`, `CONSBENF.NSN` | Período de referência do pagamento no formato AAAAMM (N6) |
-| 13  | `STATUS-PGTO` | Status do Pagamento | `RELPGT.NSN`, `CONSBENF.NSN` | Estado do pagamento: G=Gerado, P=Pago, C=Cancelado, D=Devolvido, E=Estornado |
-| 14  | `TIPO-PGTO` | Tipo de Pagamento | `RELPGT.NSN`, `CONSBENF.NSN` | Natureza do pagamento: N=Normal, D=Décimo, T=Terceiro |
-| 15  | `STATUS` | Status do Beneficiário | `CONSBENF.NSN` | Estado cadastral: A=Ativo, S=Suspenso, C=Cancelado, I=Inativo, D=Desligado |
-| 16  | `COD-PROGRAMA` | Código do Programa Social | `CONSBENF.NSN`, `RELPGT.NSN` | Identificador numérico do programa social (N4) |
-| 17  | `COD-REGIAO` | Código da Região | `CONSBENF.NSN` | Identificador numérico da região geográfica do beneficiário (N2) |
-| 18  | `RENDA-FAMILIAR` | Renda Familiar | `CONSBENF.NSN` | Renda familiar declarada do beneficiário (N9.2) |
-| 19  | `NUM-DEPENDENTES` | Número de Dependentes | `CONSBENF.NSN` | Quantidade de dependentes do beneficiário (N2) |
-| 20  | `DT-GERACAO` | Data de Geração | `RELPGT.NSN` | Data em que o pagamento foi gerado no sistema (N8) |
-| 21  | `DT-CADASTRO` | Data de Cadastro | `CONSBENF.NSN` | Data de inclusão do beneficiário no sistema |
-| 22  | `SEQ-AUDIT` | Sequência de Auditoria | `RELAUDIT.NSN` | Número sequencial único do evento de auditoria (N10) |
-| 23  | `ACAO` | Ação de Auditoria | `RELAUDIT.NSN` | Código da ação: IN=Inclusão, AL=Alteração, CO=Conciliação, CN=Consulta, DV=Divergência, EX=Exclusão |
-| 24  | `TABELA-REF` | Tabela de Referência | `RELAUDIT.NSN` | Nome da entidade/tabela afetada pelo evento de auditoria |
-| 25  | `CHAVE-REF` | Chave de Referência | `RELAUDIT.NSN` | Chave primária do registro afetado pelo evento de auditoria |
-| 26  | `VLR-ANTERIOR` | Valor Anterior | `RELAUDIT.NSN` | Valor do campo antes da alteração (trilha de auditoria) |
-| 27  | `VLR-NOVO` | Valor Novo | `RELAUDIT.NSN` | Valor do campo após a alteração (trilha de auditoria) |
-| 28  | `MAP` | Mapa de Tela | `CONSBENF.NSN` | Layout de tela do terminal 3270 para apresentação de dados |
-| 29  | `UF` | Unidade da Federação | `CONSBENF.NSN`, `RELPGT.NSN` | Sigla do estado brasileiro do beneficiário (A2) |
-| 30  | `PROG-ANT` | Programa Anterior | `RELPGT.NSN` | Variável de controle para quebra de subtotal por programa social |
-| 31  | `EX` | Exclusão | `RELAUDIT.NSN` | Código de ação de exclusão na auditoria — filtrado e nunca exibido no relatório |
-| 32  | `DV` | Divergência | `RELAUDIT.NSN` | Código de ação para eventos de divergência encontrada em conciliação |
-| 33  | `NUM-PAGTO` | Número do Pagamento | `CONSBENF.NSN`, `RELPGT.NSN` | Identificador sequencial único do registro de pagamento (N10) |
-| 34  | `HR-EVENTO` | Hora do Evento | `RELAUDIT.NSN` | Hora do evento de auditoria no formato HHMMSS (N6) |
-| 35  | `TIPO-SAIDA` | Tipo de Saída | `RELAUDIT.NSN` | Destino do relatório: T=Tela, I=Impressora |
+| 1   | `BENEF` | Beneficiário | `CADBENEF.NSN`, `BENEFICIARIO.ddm` | Pessoa cadastrada em programa social do SIFAP |
+| 2   | `CADBENEF` | Cadastro de Beneficiário | `CADBENEF.NSN` | Programa de inclusão/alteração de beneficiário (ARQ 150) |
+| 3   | `CADDEPEND` | Cadastro de Dependentes | `CADDEPEND.NSN` | Programa de vinculação de dependentes ao beneficiário titular |
+| 4   | `CADPROG` | Cadastro de Programas | `CADPROG.NSN` | Programa de inclusão/consulta de programas sociais (ARQ 155) |
+| 5   | `CPF` | Cadastro de Pessoa Física | `CADBENEF.NSN#L105`, `BENEFICIARIO.ddm#L21` | Número identificador do beneficiário; validado por módulo 11 |
+| 6   | `NIS` | Número de Identificação Social | `CADBENEF.NSN#L51`, `BENEFICIARIO.ddm` | Identificador único do beneficiário nos programas sociais |
+| 7   | `STATUS` | Situação do Beneficiário | `CADBENEF.NSN#L163`, `BENEFICIARIO.ddm#L52` | A=Ativo, S=Suspenso/Idoso>75, C=Cancelado, I=Inativo, D=Desligado |
+| 8   | `COD-PROGRAMA` | Código do Programa Social | `CADBENEF.NSN#L44`, `CADPROG.NSN#L14` | Identificador do programa ao qual o beneficiário está vinculado |
+| 9   | `PE` | Periodic Group (Grupo Periódico Adabas) | `CADDEPEND.NSN#L18`, `BENEFICIARIO.ddm#L61` | Estrutura repetitiva de dependentes; DDM suporta até 10 ocorrências |
+| 10  | `PARENTESCO` | Vínculo familiar do dependente | `CADDEPEND.NSN#L72` | Domínio no programa: FI=Filho, CO=Cônjuge, IR=Irmão, OU=Outro |
+| 11  | `FATOR-K` | Fator de Correção Especial | `CADPROG.NSN#L87`, `PROGRAMA-SOCIAL.ddm#L39` | Multiplicador de valor base; não documentado; inserido em 2008 por solicitação da SENARC |
+| 12  | `FATOR-REAJ` | Fator de Reajuste | `CADPROG.NSN#L88` | Percentual de reajuste do programa; aplicado via fórmula `FATOR-K = 1.00 + (FATOR-REAJ * 0.347215)` |
+| 13  | `VLR-BASE` | Valor Base do Benefício | `CADPROG.NSN#L87`, `PROGRAMA-SOCIAL.ddm#L30` | Valor mensal calculado após aplicação do fator K; gravado no ARQ 155 |
+| 14  | `ARQ 150` | Arquivo/Base de Beneficiários | `CADBENEF.NSN#L9` | Base principal do SIFAP (~4,2 milhões de registros); DDM BENEFICIARIO, DBID=57 FNR=150 |
+| 15  | `ARQ 155` | Arquivo/Base de Programas Sociais | `CADPROG.NSN#L9` | Tabela paramétrica de programas; DDM PROGRAMA-SOCIAL, DBID=57 FNR=151 |
+| 16  | `DT-NASC` | Data de Nascimento | `CADBENEF.NSN#L126`, `BENEFICIARIO.ddm#L19` | Formato AAAAMMDD; usada para cálculo de idade e regra de status idoso |
+| 17  | `#IDADE` | Idade Calculada | `CADBENEF.NSN#L157` | Variável local; calculada como `ANO-ATUAL - ANO-NASC`; usada para definir status S |
+| 18  | `COD-REGIAO` | Código de Região | `CADBENEF.NSN#L50`, `BENEFICIARIO.ddm#L37` | 01 a 05 = regiões do Brasil + 99 = especial; influencia regionalização de benefícios |
+| 19  | `RENDA-FAMILIAR` | Renda Familiar Declarada | `CADBENEF.NSN#L47`, `BENEFICIARIO.ddm#L55` | Renda total declarada pelo núcleo familiar; usada para elegibilidade |
+| 20  | `NUM-DEPENDENTES` | Número de Dependentes | `CADDEPEND.NSN#L19`, `BENEFICIARIO.ddm` | Contador de dependentes vinculados; limite de 5 pelo programa, 10 pelo DDM |
+| 21  | `OPER` | Tipo de Operação | `CADBENEF.NSN#L56`, `CADPROG.NSN#L48` | I=Inclusão, A=Alteração, C=Consulta |
+| 22  | `STORE` | Gravar registro novo (Adabas) | `CADBENEF.NSN#L197` | Equivalente ao INSERT no banco de dados; sempre seguido de END TRANSACTION |
+| 23  | `UPDATE` | Atualizar registro existente (Adabas) | `CADBENEF.NSN#L213`, `CADDEPEND.NSN#L120` | Equivalente ao UPDATE; requer FIND prévio |
+| 24  | `FIND` | Buscar registro por descritor (Adabas) | `CADBENEF.NSN#L139` | Busca por campo DE (Descriptor); equivale ao SELECT com WHERE |
+| 25  | `END TRANSACTION` | Commit da transação Adabas | `CADBENEF.NSN#L199`, `CADDEPEND.NSN#L122` | Confirmação da gravação; equivale ao COMMIT |
+| 26  | `COD-ELEGIBILIDADE` | Código de Elegibilidade do Programa | `CADPROG.NSN#L18`, `PROGRAMA-SOCIAL.ddm#L47` | Código que define critérios de acesso ao programa; mapeamento incompleto no DDM |
+| 27  | `SIT-BENEFICIARIO` | Situação do Beneficiário (DDM) | `BENEFICIARIO.ddm#L52` | A=Ativo, S=Suspenso, C=Cancelado, I=Inativo, D=Desligado; campo CE no DDM |
+| 28  | `IND-BIOMETRIA` | Indicador de Biometria | `BENEFICIARIO.ddm#L73` | S=Sim, N=Não, P=Pendente; campo FA; adicionado em 2005 |
+| 29  | `HASH-DIGITAL` | Hash de Template Biométrico | `BENEFICIARIO.ddm#L76` | SHA-256 do template; campo FD; status: NAO IMPLEMENTADO |
+| 30  | `SENARC` | Secretaria Nacional de Renda de Cidadania | `PROGRAMA-SOCIAL.ddm#L42` | Órgão responsável pela autorização de alterações no FATOR-K |
+| 31  | `MDAS` | Ministério do Desenvolvimento e Assistência Social | `PROGRAMA-SOCIAL.ddm#L11` | Órgão gestor dos programas sociais |
+| 32  | `DE` | Descriptor (Adabas) | `BENEFICIARIO.ddm#L22` | Campo indexado para busca por FIND; equivale a coluna indexada no SQL |
+| 33  | `GRP-DEPENDENTE` | Grupo de Dependentes (Adabas) | `BENEFICIARIO.ddm#L61` | Grupo periódico DA; armazena até 10 dependentes por beneficiário |
+| 34  | `VLR-TETO-BENEF` | Valor Teto do Benefício | `PROGRAMA-SOCIAL.ddm#L32` | Valor máximo que um beneficiário pode receber no programa |
+| 35  | `MOD11` | Módulo 11 (Algoritmo de Validação) | `CADBENEF.NSN#L224` | Algoritmo de validação de CPF por dígito verificador; subroutine VALIDA-CPF |
 
 > Adicione mais linhas conforme necessário. Não se limite a 30!
+
+| 1   | SIFAP | Sistema de Fiscalização e Administração de Pagamentos | `BATCHPGT.NSN#L3` | Nome do sistema legado |
+| 2   | PGT | Pagamento | `BATCHPGT.NSN`, `PAGAMENTO.ddm` | Prefixo/sufixo de "pagamento" em variáveis e programas |
+| 3   | BENF | Beneficiário | `BATCHPGT.NSN#L188`, `BENEFICIARIO.ddm` | Pessoa cadastrada como destinatário do pagamento |
+| 4   | CON | Conciliação | `BATCHCON.NSN#L3` | Casamento de pagamentos com retorno bancário |
+| 5   | REL | Relatório | `BATCHREL.NSN#L3` | Saída tabular consolidada |
+| 6   | COMPETENCIA | Mês/ano de referência do pagamento, formato AAAAMM | `BATCHPGT.NSN#L113-L115` | Chave temporal do ciclo |
+| 7   | CPF | Cadastro de Pessoa Física (11 dígitos) | `BENEFICIARIO.ddm`, `BATCHPGT.NSN#L18` | Identificador único do beneficiário |
+| 8   | NIS | Número de Identificação Social | `BENEFICIARIO.ddm`, `BATCHPGT.NSN#L26` | Identificador alternativo (cadastro social) |
+| 9   | UF | Unidade da Federação (2 letras) | `BENEFICIARIO.ddm`, `BATCHPGT.NSN#L25` | Localização do beneficiário |
+| 10  | COD-REGIAO | Código numérico da região (1..27) | `BATCHPGT.NSN#L24, L120-L147` | Indexa tabela de fator regional |
+| 11  | VLR-BASE | Valor base do programa social (antes de fatores) | `PROGRAMA-SOCIAL.ddm`, `BATCHPGT.NSN#L40` | Insumo do cálculo do benefício |
+| 12  | FATOR-REAJUSTE | Multiplicador de reajuste anual do programa | `PROGRAMA-SOCIAL.ddm`, `BATCHPGT.NSN#L41` | Aplicado como `(1 + fator)` |
+| 13  | TAB-REG | Tabela de fatores regionais (27 posições, 1,00..1,40) | `BATCHPGT.NSN#L66, L120-L147` | Multiplicador por região |
+| 14  | FATOR-FAM | Fator familiar (depende do nº de dependentes) | `BATCHPGT.NSN#L237-L249` | Multiplicador progressivo |
+| 15  | FATOR-RND | Fator de renda (5 faixas) | `BATCHPGT.NSN#L149-L159` | Quanto maior a renda, menor o benefício |
+| 16  | FATOR-IDADE | Fator idade (≥65 / ≥60 / <18 / demais) | `BATCHPGT.NSN#L253-L263` | Beneficia idosos e menores |
+| 17  | VLR-BRUTO | Valor bruto do pagamento (benefício + 13º + abono) | `PAGAMENTO.ddm`, `BATCHPGT.NSN#L272` | Antes do desconto |
+| 18  | VLR-LIQUIDO | Valor líquido (bruto − desconto) | `PAGAMENTO.ddm`, `BATCHPGT.NSN#L297` | Valor efetivamente pago |
+| 19  | VLR-DESCONTO | Valor de descontos aplicados sobre o bruto | `PAGAMENTO.ddm`, `BATCHPGT.NSN#L289-L294` | 3% se bruto > 500,00 |
+| 20  | VLR-ABONO | Valor do abono (15% do benefício em dezembro, programas tipo A) | `PAGAMENTO.ddm`, `BATCHPGT.NSN#L281-L286` | Só em dezembro |
+| 21  | TIPO-PGTO | Tipo do pagamento: `N` normal · `D` dezembro (13º) | `PAGAMENTO.ddm`, `BATCHPGT.NSN#L273-L275` | Marca o ciclo anual |
+| 22  | STATUS-PGTO | Status do pagamento: `G` Gerado · `P` Pago · `D` Devolvido · `E` Estornado · `C` Cancelado | `PAGAMENTO.ddm`, `BATCHCON.NSN#L168-L196` | Máquina de estados |
+| 23  | STATUS (BENEF) | Status do beneficiário: `A` Ativo (outros estados ignorados) | `BENEFICIARIO.ddm`, `BATCHPGT.NSN#L186-L189` | Filtro de elegibilidade |
+| 24  | STATUS-PROG | Status do programa social: `A` Ativo | `PROGRAMA-SOCIAL.ddm`, `BATCHPGT.NSN#L42, L217-L221` | Programas inativos bloqueiam pagamento |
+| 25  | CNAB 240 | Layout padrão FEBRABAN para troca eletrônica com bancos (registros de 240 caracteres) | `BATCHCON.NSN#L3-L8` | Arquivo de retorno do BB |
+| 26  | COD-RETORNO | Código de retorno do CNAB (`00`=pago, `01`=devolvido, `02`=estornado) | `BATCHCON.NSN#L165-L196` | Define transição de status |
+| 27  | NUM-PAGTO | Número sequencial do pagamento (chave) | `PAGAMENTO.ddm`, `BATCHPGT.NSN#L29, L296` | Incrementado por READ DESCENDING |
+| 28  | AUDITORIA | Trilha imutável de eventos (CO=conciliado, DV=divergência) | `AUDITORIA.ddm`, `BATCHCON.NSN#L222-L249` | Compliance |
+| 29  | SEQ-AUDIT | Sequencial da auditoria | `AUDITORIA.ddm`, `BATCHCON.NSN#L91` | Sem orfãos |
+| 30  | CALLNAT | Comando Natural para chamar subprograma | (ausente nos 3 batches lidos) | Cabeçalho do PGT cita CALCBENF/CALCDSCT mas não executa |
+| 31  | READ WORK FILE | Leitura sequencial de arquivo externo (não-Adabas) | `BATCHCON.NSN#L109-L110` | Lê CNAB ASCII |
+| 32  | END TRANSACTION | Commit Adabas (libera locks) | `BATCHPGT.NSN#L309` | Por registro, não por lote |
+| 33  | *DATN | Variável de sistema Natural — data atual (formato N8 AAAAMMDD) | `BATCHPGT.NSN#L113` | Determina a competência |
+| 34  | PERFORM | Chama sub-rotina interna do mesmo programa | `BATCHPGT.NSN#L251 (DET-FAIXA-RENDA-BATCH)` | Equivalente a private method |
 
 ## Exemplo de linha bem preenchida
 
