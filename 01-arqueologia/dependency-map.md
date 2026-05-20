@@ -28,36 +28,94 @@
 
 ## Diagrama de Dependências entre Programas
 
-> **Contribuição Par 2 (Arquitetura):** mapa dos 3 batches do ciclo mensal de pagamentos. Outros pares completam com seus programas.
->
-> **Achado-chave:** nenhum `CALLNAT` entre os 3 batches. Acoplamento é puramente via **tabelas Adabas compartilhadas** (contrato implícito de dados).
+> **Achado-chave:** nenhum `CALLNAT` em nenhum dos 15 programas. Todos usam `PERFORM` (sub-rotinas internas).
+> O acoplamento entre programas é puramente via **tabelas Adabas compartilhadas** (contrato implícito de dados).
+> O cabeçalho de `BATCHPGT` cita "CHAMA CALCBENF E CALCDSCT" — na prática a lógica foi duplicada inline para performance.
 
 ```mermaid
-flowchart LR
- classDef batch fill:#FFF7E0,stroke:#FFB900,color:#0A0A0A
- classDef view fill:#E5F6FD,stroke:#00A4EF,color:#0A0A0A
- classDef ext fill:#F1F8E3,stroke:#7FBA00,color:#0A0A0A
+graph LR
+    %% Estilos
+    classDef batch fill:#FDEBD0,stroke:#E67E22,color:#000
+    classDef calc fill:#D5F5E3,stroke:#27AE60,color:#000
+    classDef cad fill:#D6EAF8,stroke:#2980B9,color:#000
+    classDef val fill:#F9E79F,stroke:#F1C40F,color:#000
+    classDef rel fill:#FADBD8,stroke:#E74C3C,color:#000
+    classDef cons fill:#E8DAEF,stroke:#8E44AD,color:#000
+    classDef ddm fill:#F2F3F4,stroke:#566573,color:#000
 
- PGT[BATCHPGT<br/>geração mensal]:::batch
- CON[BATCHCON<br/>conciliação CNAB]:::batch
- REL[BATCHREL<br/>relatório consolidado]:::batch
+    %% Programas Batch
+    BATCHPGT[BATCHPGT<br/>Geração Pagamentos]:::batch
+    BATCHCON[BATCHCON<br/>Conciliação Bancária]:::batch
+    BATCHREL[BATCHREL<br/>Relatórios Consolidados]:::batch
 
- BEN[(BENEFICIARIO)]:::view
- PAG[(PAGAMENTO)]:::view
- PRG[(PROGRAMA-SOCIAL)]:::view
- AUD[(AUDITORIA)]:::view
- CNAB[/Arquivo CNAB 240 BB/]:::ext
+    %% Programas de Cálculo
+    CALCBENF[CALCBENF<br/>Cálculo Benefício]:::calc
+    CALCDSCT[CALCDSCT<br/>Cálculo Descontos]:::calc
+    CALCCORR[CALCCORR<br/>Correção Retroativa]:::calc
 
- PGT -- READ BY CPF --> BEN
- PGT -- FIND --> PRG
- PGT -- FIND/STORE --> PAG
+    %% Programas de Cadastro
+    CADBENEF[CADBENEF<br/>Cadastro Beneficiário]:::cad
+    CADDEPEND[CADDEPEND<br/>Cadastro Dependentes]:::cad
+    CADPROG[CADPROG<br/>Cadastro Programas]:::cad
 
- CNAB -- READ WORK FILE --> CON
- CON -- FIND/UPDATE --> PAG
- CON -- STORE --> AUD
+    %% Programas de Validação
+    VALBENEF[VALBENEF<br/>Validação Beneficiário]:::val
+    VALDOCS[VALDOCS<br/>Validação Documentos]:::val
+    VALELEG[VALELEG<br/>Validação Elegibilidade]:::val
 
- REL -- READ BY COMPETENCIA --> PAG
- REL -- FIND --> BEN
+    %% Relatórios
+    RELPGT[RELPGT<br/>Relatório Pagamentos]:::rel
+    RELAUDIT[RELAUDIT<br/>Relatório Auditoria]:::rel
+
+    %% Consulta
+    CONSBENF[CONSBENF<br/>Consulta Beneficiário]:::cons
+
+    %% Arquivos Adabas (DDMs)
+    BENEF[(BENEFICIARIO<br/>ARQ 150)]:::ddm
+    PAGTO[(PAGAMENTO<br/>ARQ 160)]:::ddm
+    PROGSOC[(PROGRAMA-SOCIAL<br/>ARQ 155)]:::ddm
+    AUDIT[(AUDITORIA<br/>ARQ 170)]:::ddm
+
+    %% Chamadas entre programas (documentadas em comentários)
+    BATCHPGT -->|"CHAMA (lógica inline)"| CALCBENF
+    BATCHPGT -->|"CHAMA (lógica inline)"| CALCDSCT
+    BATCHREL -.->|"referencia lógica"| CALCBENF
+    CALCBENF -.->|"replica lógica"| CALCDSCT
+
+    %% Acessos a dados - Batch
+    BATCHPGT --> BENEF
+    BATCHPGT --> PAGTO
+    BATCHPGT --> PROGSOC
+    BATCHCON --> PAGTO
+    BATCHCON --> AUDIT
+    BATCHREL --> PAGTO
+    BATCHREL --> BENEF
+
+    %% Acessos a dados - Cálculo
+    CALCBENF --> BENEF
+    CALCBENF --> PAGTO
+    CALCBENF --> PROGSOC
+    CALCDSCT --> PAGTO
+    CALCDSCT --> BENEF
+    CALCCORR --> PAGTO
+
+    %% Acessos a dados - Cadastro
+    CADBENEF --> BENEF
+    CADDEPEND --> BENEF
+    CADPROG --> PROGSOC
+
+    %% Acessos a dados - Validação
+    VALBENEF --> BENEF
+    VALDOCS --> BENEF
+    VALELEG --> BENEF
+    VALELEG --> PROGSOC
+
+    %% Acessos a dados - Consulta/Relatórios
+    CONSBENF --> BENEF
+    CONSBENF --> PAGTO
+    RELPGT --> PAGTO
+    RELPGT --> BENEF
+    RELAUDIT --> AUDIT
 ```
 
 ### Fluxo de negócio consolidado (sequence)
@@ -97,51 +155,95 @@ flowchart LR
  subgraph "Entrada de Dados"
  UI["Terminal 3270"]
  BATCH["Arquivos Batch"]
+ CNAB[/"Arquivo CNAB 240 BB"/]
  end
 
- subgraph "Processamento"
- PROG["Programas Natural"]
+ subgraph "Programas Online"
+ CADBENEF["CADBENEF"]
+ CADDEPEND["CADDEPEND"]
+ CADPROG["CADPROG"]
+ CONSBENF["CONSBENF"]
+ VALBENEF["VALBENEF"]
+ VALDOCS["VALDOCS"]
+ VALELEG["VALELEG"]
+ end
+
+ subgraph "Programas Cálculo"
+ CALCBENF["CALCBENF"]
+ CALCDSCT["CALCDSCT"]
+ CALCCORR["CALCCORR"]
+ end
+
+ subgraph "Programas Batch"
+ BATCHPGT["BATCHPGT"]
+ BATCHCON["BATCHCON"]
+ BATCHREL["BATCHREL"]
+ RELPGT["RELPGT"]
+ RELAUDIT["RELAUDIT"]
  end
 
  subgraph "Armazenamento (Adabas)"
- DDM1[("BENEFICIARIO")]
- DDM2[("PAGAMENTO")]
- DDM3[("DDM 3: ???")]
- DDM4[("DDM 4: ???")]
+ DDM1[("BENEFICIARIO<br/>ARQ 150")]
+ DDM2[("PAGAMENTO<br/>ARQ 160")]
+ DDM3[("PROGRAMA-SOCIAL<br/>ARQ 155")]
+ DDM4[("AUDITORIA<br/>ARQ 170")]
  end
 
- UI --> PROG
- BATCH --> PROG
- PROG <--> DDM1
- PROG <--> DDM2
- PROG <--> DDM3
- PROG <--> DDM4
-```
+ UI --> CADBENEF & CADDEPEND & CADPROG & CONSBENF
+ UI --> VALBENEF & VALDOCS & VALELEG
+ UI --> CALCBENF & CALCDSCT & CALCCORR
+ BATCH --> BATCHPGT & BATCHREL & RELPGT & RELAUDIT
+ CNAB --> BATCHCON
 
-> Substitua "DDM 3: ???" e "DDM 4: ???" pelos nomes reais encontrados em [`../01-arqueologia/legado-sifap/adabas-ddms/`](../01-arqueologia/legado-sifap/adabas-ddms/).
+ CADBENEF & CADDEPEND & VALBENEF & VALDOCS & VALELEG <--> DDM1
+ CADPROG & VALELEG <--> DDM3
+ CONSBENF & CALCBENF & CALCDSCT <--> DDM1
+ CONSBENF & CALCBENF & BATCHPGT <--> DDM2
+ BATCHPGT <--> DDM1
+ BATCHPGT & CALCCORR <--> DDM2
+ BATCHPGT <--> DDM3
+ BATCHCON <--> DDM2
+ BATCHCON --> DDM4
+ BATCHREL <--> DDM2
+ BATCHREL <--> DDM1
+ RELPGT <--> DDM2
+ RELPGT <--> DDM1
+ RELAUDIT <--> DDM4
+```
 
 ## Tabela de Dependências
 
-> Linhas preenchidas pelo Par 2. Outros pares completam.
-
-| Programa | Chama (CALLNAT) | Lê (READ/FIND) DDMs | Escreve (STORE/UPDATE) DDMs | Observações |
-| ------------ | --------------- | -------------- | --------------------------- | ----------- |
-| BATCHPGT.NSN | _nenhum_ (cabeçalho cita CALCBENF/CALCDSCT mas código é inline — `BATCHPGT.NSN#L11`) | `BENEFICIARIO` (READ BY CPF), `PROGRAMA-SOCIAL` (FIND), `PAGAMENTO` (FIND) | `PAGAMENTO` (STORE) | Sub-rotina interna `DET-FAIXA-RENDA-BATCH`; lógica de cálculo duplicada inline |
-| BATCHCON.NSN | _nenhum_ | `AUDITORIA` (READ BY SEQ DESC), `PAGAMENTO` (FIND), work file CNAB 240 | `PAGAMENTO` (UPDATE), `AUDITORIA` (STORE) | Sub-rotinas internas `GRAVA-AUDITORIA-CONC`, `GRAVA-AUDITORIA-DIVERG`; bloco Banco Real comentado desde 2007 |
-| BATCHREL.NSN | _nenhum_ | `PAGAMENTO` (READ BY COMPETENCIA), `BENEFICIARIO` (FIND) | _nenhum_ (read-only — saída só em impressora) | N+1 reads no FIND BENEFICIARIO; paginação declarada mas não usada |
+| Programa | Chama (CALLNAT) | Lê (READ/FIND) DDMs | Escreve (STORE/UPDATE) DDMs | Sub-rotinas internas (PERFORM) | Observações |
+| ------------ | --------------- | -------------- | --------------------------- | ------------------------------ | ----------- |
+| BATCHPGT.NSN | _nenhum_ | `BENEFICIARIO` (READ BY CPF), `PROGRAMA-SOCIAL` (FIND), `PAGAMENTO` (FIND) | `PAGAMENTO` (STORE) | `DET-FAIXA-RENDA-BATCH` | Cabeçalho cita CALCBENF/CALCDSCT mas código é inline |
+| BATCHCON.NSN | _nenhum_ | `AUDITORIA` (READ BY SEQ DESC), `PAGAMENTO` (FIND), work file CNAB 240 | `PAGAMENTO` (UPDATE), `AUDITORIA` (STORE) | `GRAVA-AUDITORIA-CONC`, `GRAVA-AUDITORIA-DIVERG` | Bloco Banco Real comentado desde 2007 |
+| BATCHREL.NSN | _nenhum_ | `PAGAMENTO` (READ BY COMPETENCIA), `BENEFICIARIO` (FIND) | _nenhum_ (read-only) | `IMPRIME-CABECALHO` | Saída flat file impressora mainframe |
+| CALCBENF.NSN | _nenhum_ | `BENEFICIARIO` (FIND), `PROGRAMA-SOCIAL` (FIND), `PAGAMENTO` (FIND) | `PAGAMENTO` (STORE) | `DET-FAIXA-RENDA`, `CALC-DESCONTOS` | Programa interativo (INPUT); referencia lógica de CALCDSCT |
+| CALCDSCT.NSN | _nenhum_ | `PAGAMENTO` (FIND), `BENEFICIARIO` (FIND) | `PAGAMENTO` (UPDATE) | `CALC-CONTRIB-SOCIAL` | Usa PE GROUP DESCONTOS; teto 30% exceto judicial |
+| CALCCORR.NSN | _nenhum_ | `PAGAMENTO` (READ BY CPF-BENEF) | `PAGAMENTO` (UPDATE) | `CALC-INDICE-ACUM` | Tabela IPCA hardcoded 2010-2012; bloco Plano Verão comentado |
+| CADBENEF.NSN | _nenhum_ | `BENEFICIARIO` (FIND) | `BENEFICIARIO` (STORE/UPDATE) | `VALIDA-CPF` | Inclusão e Alteração |
+| CADDEPEND.NSN | _nenhum_ | `BENEFICIARIO` (FIND) | `BENEFICIARIO` (UPDATE PE GROUP) | _(nenhuma)_ | PE GROUP DEPENDENTES |
+| CADPROG.NSN | _nenhum_ | `PROGRAMA-SOCIAL` (FIND) | `PROGRAMA-SOCIAL` (STORE/UPDATE) | `CONSULTA-PROG` | Inclusão/Consulta programas sociais |
+| CONSBENF.NSN | _nenhum_ | `BENEFICIARIO` (FIND), `PAGAMENTO` (READ) | _nenhum_ (read-only) | `MASCARA-CPF` | Tela online 3270 (MAP) |
+| RELPGT.NSN | _nenhum_ | `PAGAMENTO` (READ), `BENEFICIARIO` (FIND) | _nenhum_ (read-only) | `IMPRIME-SUBTOTAL`, `IMPRIME-CABECALHO` | Relatório analítico por período |
+| RELAUDIT.NSN | _nenhum_ | `AUDITORIA` (READ) | _nenhum_ (read-only) | `IMPRIME-CAB-AUDIT` | Trilha de auditoria |
+| VALBENEF.NSN | _nenhum_ | `BENEFICIARIO` (FIND) | _nenhum_ (validação) | `VALIDA-CPF-COMPLETO`, `VALIDA-DATA`, `VALIDA-NOME` | Validação dados cadastrais |
+| VALDOCS.NSN | _nenhum_ | `BENEFICIARIO` (FIND) | _nenhum_ (validação) | `VALIDA-CPF-DOC`, `VALIDA-RG`, `CHECK-DOC-ESPECIAL` | Validação documentos |
+| VALELEG.NSN | _nenhum_ | `BENEFICIARIO` (FIND), `PROGRAMA-SOCIAL` (FIND) | _nenhum_ (validação) | `VERIF-ELEG-ESPECIFICA` | Validação elegibilidade |
 
 ## Dependências Circulares
 
-> Liste aqui qualquer dependência circular encontrada (programa A chama B que chama A):
-
-- Nenhuma identificada entre os 3 batches do Par 2.
+> Nenhuma dependência circular identificada entre os 15 programas (não há `CALLNAT`).
 
 ## Programas Órfãos
 
 > Programas que não são chamados por nenhum outro (possíveis pontos de entrada ou código morto):
 
-- Os 3 batches do Par 2 são **pontos de entrada operacionais** (chamados por JCL/operador, não por outro `.NSN`).
-- Suspeita: deve existir um 4º programa de **remessa CNAB de envio** ao BB — nenhum dos 3 batches gera esse arquivo. Investigar com PO/EA.
+- **Todos os 15 programas são pontos de entrada independentes** — nenhum é chamado por outro via `CALLNAT`.
+- Programas **batch** (BATCHPGT, BATCHCON, BATCHREL) são chamados por JCL/operador.
+- Programas **online** (CADBENEF, CADDEPEND, CADPROG, CONSBENF, CALCBENF, CALCDSCT, CALCCORR, VALBENEF, VALDOCS, VALELEG) são acionados via terminal 3270.
+- Programas **relatório** (RELPGT, RELAUDIT) são chamados por operador.
+- **Suspeita:** deve existir um programa de **remessa CNAB de envio** ao BB — nenhum dos 15 gera esse arquivo. Investigar com PO/EA.
 
 ---
 
