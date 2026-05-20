@@ -1,7 +1,7 @@
 # Reference materials cloned by scripts/setup.sh — never commit these.
 # Note: legado-natural/ is bundled with the kit (real folder) and IS committed.
 reference/
-prototype
+# prototype/  <- Comentado: código-fonte do S3 deve ser commitado por Par 3
 infra
 
 # OS files
