@@ -1,4 +1,4 @@
-<!-- markdownlint-disable MD013 MD025 MD026 MD028 MD029 MD034 MD040 MD051 MD060 -->
+<!-- markdownlint-disable MD012 MD013 MD025 MD026 MD028 MD029 MD033 MD034 MD040 MD051 MD060 -->
 
 # Relatório de Descoberta — Estágio 1: Arqueologia Digital
 
