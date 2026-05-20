@@ -46,21 +46,16 @@ O que NÃO conta: paginação de relatório, formatação de saída, manipulaç�
 
 | ID     | Regra de Negócio | Programa Fonte | Campos DDM | Nível de Risco | Notas |
 | ------ | ---------------- | -------------- | ---------- | -------------- | ----- |
-| BR-001 |                  |                |            |                |       |
-| BR-002 |                  |                |            |                |       |
-| BR-003 |                  |                |            |                |       |
-| BR-004 |                  |                |            |                |       |
-| BR-005 |                  |                |            |                |       |
-| BR-006 |                  |                |            |                |       |
-| BR-007 |                  |                |            |                |       |
-| BR-008 |                  |                |            |                |       |
-| BR-009 |                  |                |            |                |       |
-| BR-010 |                  |                |            |                |       |
-| BR-011 |                  |                |            |                |       |
-| BR-012 |                  |                |            |                |       |
-| BR-013 |                  |                |            |                |       |
-| BR-014 |                  |                |            |                |       |
-| BR-015 |                  |                |            |                |       |
+| BR-001 | Programa social inativo não permite elegibilidade do beneficiário. | 01-arqueologia/legado-sifap/natural-programs/VALELEG.NSN#L99-L102 | PROGRAMA-SOCIAL.SIT-PROGRAMA, BENEFICIARIO.SIT-BENEFICIARIO | ALTO | Bloqueio de fluxo principal de concessão. |
+| BR-002 | Beneficiário da região especial 99 é marcado elegível imediatamente. | 01-arqueologia/legado-sifap/natural-programs/VALELEG.NSN#L107-L111 | BENEFICIARIO.COD-REGIAO | ALTO | Regra de exceção com bypass das validações subsequentes. |
+| BR-003 | Beneficiário com status S, C, D ou I fica inelegível (somente A permanece elegível). | 01-arqueologia/legado-sifap/natural-programs/VALELEG.NSN#L116-L134 | BENEFICIARIO.SIT-BENEFICIARIO | CRÍTICO | Regra central de elegibilidade cadastral. |
+| BR-004 | Faixa etária do programa é obrigatória quando idade mínima/máxima estiver parametrizada. | 01-arqueologia/legado-sifap/natural-programs/VALELEG.NSN#L139-L152 | PROGRAMA-SOCIAL.IDADE-MIN, PROGRAMA-SOCIAL.IDADE-MAX | ALTO | Reprova elegibilidade fora da faixa. |
+| BR-005 | Renda familiar acima do teto parametrizado do programa reprova elegibilidade. | 01-arqueologia/legado-sifap/natural-programs/VALELEG.NSN#L157-L163 | PROGRAMA-SOCIAL.RENDA-MAX-PERCAP, BENEFICIARIO.IND-RENDA-PERCAP | CRÍTICO | Regra financeira de acesso ao benefício. |
+| BR-006 | Programa tipo assistencial exige documentação completa; sem docs válidos, inelegível. | 01-arqueologia/legado-sifap/natural-programs/VALELEG.NSN#L168-L182 | PROGRAMA-SOCIAL.TIPO-PROGRAMA, BENEFICIARIO.MOT-SITUACAO | ALTO | Regra documental para tipo A. |
+| BR-007 | Em dezembro, cálculo inclui 13o e, para programa tipo A, aplica abono natalino de 15%. | 01-arqueologia/legado-sifap/natural-programs/CALCBENF.NSN#L242-L260 | PAGAMENTO.ANO-MES-REF, PAGAMENTO.VLR-BRUTO, PROGRAMA-SOCIAL.TIPO-PROGRAMA | CRÍTICO | Regra de impacto direto no valor pago. |
+| BR-008 | Desconto básico de 3% só é aplicado quando valor bruto ultrapassa 500,00. | 01-arqueologia/legado-sifap/natural-programs/CALCBENF.NSN#L318-L322 | PAGAMENTO.VLR-BRUTO, PAGAMENTO.VLR-DESCONTO-TOTAL | ALTO | Threshold financeiro explícito. |
+| BR-009 | Desconto total é limitado ao teto de 30% do bruto, exceto para desconto judicial (tipo J). | 01-arqueologia/legado-sifap/natural-programs/CALCDSCT.NSN#L165-L169 | PAGAMENTO.VLR-BRUTO, PAGAMENTO.VLR-DESCONTO-TOTAL, PAGAMENTO.TIPO-DESCONTO | CRÍTICO | Exceção legal explícita para judicial. |
+| BR-010 | Na conciliação, diferença acima de 0,01 entre SIFAP e banco gera divergência e auditoria; caso contrário, atualiza status pelo código de retorno. | 01-arqueologia/legado-sifap/natural-programs/BATCHCON.NSN#L160-L202 | PAGAMENTO.VLR-LIQUIDO, PAGAMENTO.SIT-PAGAMENTO, PAGAMENTO.COD-RETORNO-BANCO, AUDITORIA.COD-ACAO | CRÍTICO | Regra de conciliação financeira e trilha auditável. |
 
 > Adicione mais linhas conforme necessário. Lembre-se: existem **10 regras escondidas** no código!
 
