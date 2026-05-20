@@ -46,34 +46,34 @@
 
 | ID      | Descrição | Onde Encontrado | Impacto Potencial | Confiança |
 | ------- | --------- | --------------- | ----------------- | --------- |
-| MYS-PGT-01 | Cabeçalho promete `CALLNAT CALCBENF`/`CALCDSCT`, mas todo o cálculo está inline no programa | `BATCHPGT.NSN#L11` + ausência de CALLNAT | Divergência entre código documentado e executado; outros programas podem usar CALCBENF "verdadeiro" e produzir resultados diferentes | ALTA |
-| MYS-PGT-02 | Comentário "OTIMIZ ORD CPF (1999)" + "SISTEMAS DOWNSTREAM DEPENDEM DESTA ORDENACAO" — mas nem CON nem REL dependem da ordem | `BATCHPGT.NSN#L4, L169-L171` | Existe consumidor downstream não mapeado | ALTA |
-| MYS-PGT-03 | `#TAB-REG` tem 27 posições mas só 1..25 são consultadas — UFs 26/27 caem em `ELSE 1.0000` | `BATCHPGT.NSN#L120-L147, L231-L235` | Beneficiários de DF (26?) e EX (27?) recebem fator padrão sem decisão de negócio | ALTA |
-| MYS-PGT-04 | Truncamento manual `(× 100) / 100` (não arredondamento) — soma de centavos diverge do banco | `BATCHPGT.NSN#L269-L271` | Discrepância contábil acumulada; relaciona-se com MYS-CON-02 e MYS-REL-01 | ALTA |
-| MYS-PGT-05 | Campo `RENDA-MAX` da view `PROGRAMA-V` é declarado mas **nunca consultado** | `BATCHPGT.NSN#L43` + ausência de uso | Beneficiários acima do teto de renda do programa não são bloqueados aqui | ALTA |
-| MYS-PGT-06 | Idade calculada só por ano (`#ANO − #ANO-NASC`), sem mês/dia | `BATCHPGT.NSN#L227-L229` | Beneficiário que faz 65 em fevereiro já recebe fator de idoso em janeiro | MÉDIA |
+| MYS-PGT-01 | Cabeçalho promete `CALLNAT CALCBENF`/`CALCDSCT`, mas todo o cálculo está inline no programa | `BATCHPGT.NSN#L14` + ausência de CALLNAT | Divergência entre código documentado e executado; outros programas podem usar CALCBENF "verdadeiro" e produzir resultados diferentes | ALTA |
+| MYS-PGT-02 | Comentário "OTIMIZ ORD CPF (1999)" + "SISTEMAS DOWNSTREAM DEPENDEM DESTA ORDENACAO" — mas nem CON nem REL dependem da ordem | `BATCHPGT.NSN#L6, L178-L179` | Existe consumidor downstream não mapeado | ALTA |
+| MYS-PGT-03 | `#TAB-REG` tem 27 posições mas só 1..25 são consultadas — UFs 26/27 caem em `ELSE 1.0000` | `BATCHPGT.NSN#L124-L150, L240-L244` | Beneficiários de DF (26?) e EX (27?) recebem fator padrão sem decisão de negócio | ALTA |
+| MYS-PGT-04 | Truncamento manual `(× 100) / 100` (não arredondamento) — soma de centavos diverge do banco | `BATCHPGT.NSN#L284-L285` | Discrepância contábil acumulada; relaciona-se com MYS-CON-02 e MYS-REL-01 | ALTA |
+| MYS-PGT-05 | Campo `RENDA-MAX` da view `PROGRAMA-V` é declarado mas **nunca consultado** | `BATCHPGT.NSN#L49` + ausência de uso | Beneficiários acima do teto de renda do programa não são bloqueados aqui | ALTA |
+| MYS-PGT-06 | Idade calculada só por ano (`#ANO − #ANO-NASC`), sem mês/dia | `BATCHPGT.NSN#L236-L237` | Beneficiário que faz 65 em fevereiro já recebe fator de idoso em janeiro | MÉDIA |
 | MYS-PGT-07 | Não há `ON ERROR` global; erro de I/O aborta sem registrar em tabela de log | `BATCHPGT.NSN` (ausência) | Falha silenciosa em meio ao lote; difícil retomar | MÉDIA |
-| MYS-PGT-08 | `#LOG-WORK` / `#LOG-ERRO` declarados mas nunca gravados em arquivo | `BATCHPGT.NSN#L106-L107` | Log fica só no `WRITE` console | BAIXA |
-| MYS-CON-01 | Conciliação compara retorno contra `VLR-LIQUIDO`, mas banco recebe valor pago ao beneficiário (também líquido? confirmar) | `BATCHCON.NSN#L153` | Possível inversão de campo causa falso match/divergência | MÉDIA |
-| MYS-CON-02 | Tolerância de R$ 0,01 sugere problema crônico de arredondamento — provável causa em PGT | `BATCHCON.NSN#L158` | Cascata do MYS-PGT-04 | ALTA |
-| MYS-CON-03 | `INPUT` pede competência e arquivo, mas nada valida coerência (arquivo CNAB pode ser de outro mês) | `BATCHCON.NSN#L97-L101` | Operador pode conciliar mês errado sem aviso | ALTA |
-| MYS-CON-04 | `DT-PGTO` vem do CNAB como `A8`; cast para `N8` sem validar formato (AAAAMMDD vs DDMMAAAA) | `BATCHCON.NSN#L135` | Datas inválidas gravadas silenciosamente | MÉDIA |
-| MYS-CON-05 | Apenas códigos CNAB 00/01/02 são tratados; CNAB 240 BB tem dezenas de códigos — demais viram só log | `BATCHCON.NSN#L165-L196` | Devoluções/estornos com códigos específicos ficam invisíveis | ALTA |
-| MYS-CON-06 | `COD-BANCO = 1` hardcoded para retorno BB — não há cadastro de bancos | `BATCHCON.NSN#L174` | Multibanco impossível sem refatorar | MÉDIA |
-| MYS-CON-07 | Bloco "Banco Real" comentado desde 2007 (aquisição pelo Santander) | `BATCHCON.NSN#L218-L237` | Código morto há 19 anos — remover ou ressuscitar? | BAIXA |
-| MYS-CON-08 | Em divergência, auditoria é gravada **mas o pagamento não muda de status** (fica em `'G'`) | `BATCHCON.NSN#L153-L201` | Divergência sem ação operacional — pagamento "preso" no estado inicial | ALTA |
-| MYS-REL-01 | Comentário explícito: *"ARREDONDAMENTO DIFERE DO CALCBENF (ROUND VS TRUNCATE)"* | `BATCHREL.NSN#L121` | Confirma inconsistência matemática suspeita em PGT/CON | ALTA |
-| MYS-REL-02 | Agrupamento de UFs por intervalo de `COD-REGIAO` (1-5/6-10/11-15/16-20/demais) é simplificado demais para 27 UFs | `BATCHREL.NSN#L102-L118` | Mapeamento por faixa contínua frágil | MÉDIA |
-| MYS-REL-03 | `FIND BENEFICIARIO` por CPF para cada pagamento — N+1 reads | `BATCHREL.NSN#L97-L99` | Performance ruim com base grande | MÉDIA |
-| MYS-REL-04 | `#MAX-LINHAS`, `#LINHA`, `#PAG` declarados — controle de paginação real não implementado | `BATCHREL.NSN#L74-L77, L168-L175` | Quebra de página falha em listagem longa | BAIXA |
-| MYS-REL-05 | `NONE → MOVE 1 TO #IDX-STS` mistura status desconhecido com bucket "Gerado" | `BATCHREL.NSN#L142-L144` | Totais por status mascarados | MÉDIA |
-| MYS-REL-06 | `INPUT 'COMPETENCIA RELATORIO:'` interativo num programa chamado BATCH — provavelmente rodava via JCL com parâmetro | `BATCHREL.NSN#L89` | Como migrar de JCL para scheduler moderno? | BAIXA |
+| MYS-PGT-08 | `#LOG-WORK` / `#LOG-ERRO` declarados mas nunca gravados em arquivo | `BATCHPGT.NSN#L100-L102` | Log fica só no `WRITE` console | BAIXA |
+| MYS-CON-01 | Conciliação compara retorno contra `VLR-LIQUIDO`, mas banco recebe valor pago ao beneficiário (também líquido? confirmar) | `BATCHCON.NSN#L155` | Possível inversão de campo causa falso match/divergência | MÉDIA |
+| MYS-CON-02 | Tolerância de R$ 0,01 sugere problema crônico de arredondamento — provável causa em PGT | `BATCHCON.NSN#L160` | Cascata do MYS-PGT-04 | ALTA |
+| MYS-CON-03 | `INPUT` pede competência e arquivo, mas nada valida coerência (arquivo CNAB pode ser de outro mês) | `BATCHCON.NSN#L93-L96` | Operador pode conciliar mês errado sem aviso | ALTA |
+| MYS-CON-04 | `DT-PGTO` vem do CNAB como `A8`; cast para `N8` sem validar formato (AAAAMMDD vs DDMMAAAA) | `BATCHCON.NSN#L134` | Datas inválidas gravadas silenciosamente | MÉDIA |
+| MYS-CON-05 | Apenas códigos CNAB 00/01/02 são tratados; CNAB 240 BB tem dezenas de códigos — demais viram só log | `BATCHCON.NSN#L171-L199` | Devoluções/estornos com códigos específicos ficam invisíveis | ALTA |
+| MYS-CON-06 | `COD-BANCO = 1` hardcoded para retorno BB — não há cadastro de bancos | `BATCHCON.NSN#L176` | Multibanco impossível sem refatorar | MÉDIA |
+| MYS-CON-07 | Bloco "Banco Real" comentado desde 2007 (aquisição pelo Santander) | `BATCHCON.NSN#L206-L224` | Código morto há 19 anos — remover ou ressuscitar? | BAIXA |
+| MYS-CON-08 | Em divergência, auditoria é gravada **mas o pagamento não muda de status** (fica em `'G'`) | `BATCHCON.NSN#L160-L167` | Divergência sem ação operacional — pagamento "preso" no estado inicial | ALTA |
+| MYS-REL-01 | Comentário explícito: *"ARREDONDAMENTO DIFERE DO CALCBENF (ROUND VS TRUNCATE)"* | `BATCHREL.NSN#L136` | Confirma inconsistência matemática suspeita em PGT/CON | ALTA |
+| MYS-REL-02 | Agrupamento de UFs por intervalo de `COD-REGIAO` (1-5/6-10/11-15/16-20/demais) é simplificado demais para 27 UFs | `BATCHREL.NSN#L116-L133` | Mapeamento por faixa contínua frágil | MÉDIA |
+| MYS-REL-03 | `FIND BENEFICIARIO` por CPF para cada pagamento — N+1 reads | `BATCHREL.NSN#L112-L114` | Performance ruim com base grande | MÉDIA |
+| MYS-REL-04 | `#MAX-LINHAS`, `#LINHA`, `#PAG` declarados — controle de paginação real não implementado | `BATCHREL.NSN#L60-L62, L70-L72` | Quebra de página falha em listagem longa | BAIXA |
+| MYS-REL-05 | `NONE → MOVE 1 TO #IDX-STS` mistura status desconhecido com bucket "Gerado" | `BATCHREL.NSN#L157-L158` | Totais por status mascarados | MÉDIA |
+| MYS-REL-06 | `INPUT 'COMPETENCIA RELATORIO:'` interativo num programa chamado BATCH — provavelmente rodava via JCL com parâmetro | `BATCHREL.NSN#L102` | Como migrar de JCL para scheduler moderno? | BAIXA |
 
 ## Detalhamento dos Mistérios (alta prioridade)
 
 ### MYS-PGT-01 [↔ INC-003 + MYS-003]: Cabeçalho mente sobre CALLNATs — regras críticas de cálculo não documentadas
 
-- **Arquivo**: `01-arqueologia/legado-sifap/natural-programs/BATCHPGT.NSN#L11`
+- **Arquivo**: `01-arqueologia/legado-sifap/natural-programs/BATCHPGT.NSN#L14`
 - **Trecho de código**:
 
 ```natural
@@ -90,9 +90,9 @@
 ### MYS-PGT-04 / MYS-CON-02 / MYS-REL-01 [↔ MYS-005 + INC-004]: Inconsistência de arredondamento — perda sistemática de centavos
 
 - **Arquivos**:
-  - `01-arqueologia/legado-sifap/natural-programs/BATCHPGT.NSN#L269-L271` (truncamento)
-  - `01-arqueologia/legado-sifap/natural-programs/BATCHCON.NSN#L158` (tolerância 0,01)
-  - `01-arqueologia/legado-sifap/natural-programs/BATCHREL.NSN#L120-L125` (arredondamento bancário +0,005)
+  - `01-arqueologia/legado-sifap/natural-programs/BATCHPGT.NSN#L284-L285` (truncamento)
+  - `01-arqueologia/legado-sifap/natural-programs/BATCHCON.NSN#L160` (tolerância 0,01)
+  - `01-arqueologia/legado-sifap/natural-programs/BATCHREL.NSN#L136-L139` (arredondamento bancário +0,005)
 - **Trecho de código (PGT)**:
 
 ```natural
@@ -116,7 +116,7 @@ COMPUTE #VLR-BRUTO = #VLR-BRUTO + 0.005
 
 ### MYS-CON-08 [↔ MYS-010]: Divergência não muda status do pagamento — evento de auditoria invisível nos relatórios
 
-- **Arquivo**: `01-arqueologia/legado-sifap/natural-programs/BATCHCON.NSN#L153-L201`
+- **Arquivo**: `01-arqueologia/legado-sifap/natural-programs/BATCHCON.NSN#L160-L167`
 - **O que esperávamos**: divergência de valor gera status específico (ex.: `'V'` Divergente) para acionar tratamento operacional.
 - **O que o código faz**: grava auditoria `'DV'` mas o pagamento permanece com `STATUS-PGTO = 'G'`. Sem visibilidade no relatório.
 - **Hipótese do time**: divergências são tratadas manualmente pelo operador via consulta à auditoria — não há fluxo automatizado.
@@ -126,7 +126,7 @@ COMPUTE #VLR-BRUTO = #VLR-BRUTO + 0.005
 
 ### MYS-PGT-02 [↔ MYS-009]: Quem é o "sistema downstream"? — ordem por CPF como dependência oculta
 
-- **Arquivo**: `01-arqueologia/legado-sifap/natural-programs/BATCHPGT.NSN#L4, L169-L171`
+- **Arquivo**: `01-arqueologia/legado-sifap/natural-programs/BATCHPGT.NSN#L6, L178-L179`
 - **Trecho**:
 
 ```natural
@@ -148,7 +148,7 @@ COMPUTE #VLR-BRUTO = #VLR-BRUTO + 0.005
 
 1. [ ] Easter Egg 1 (EGG-001): a investigar em outros programas
 2. [ ] Easter Egg 2 (EGG-002): a investigar em programas de validação (`VAL*.NSN` — Par 4)
-3. [x] **Easter Egg 3 (EGG-003) — ENCONTRADO** → `MYS-CON-07`: bloco de integração com o **Banco Real** comentado em `BATCHCON.NSN#L218-L237` desde 2007 (banco adquirido pelo Santander). Código morto há 19 anos.
+3. [x] **Easter Egg 3 (EGG-003) — ENCONTRADO** → `MYS-CON-07`: bloco de integração com o **Banco Real** comentado em `BATCHCON.NSN#L206-L224` desde 2007 (banco adquirido pelo Santander). Código morto há 19 anos.
 
 ## Resumo
 
