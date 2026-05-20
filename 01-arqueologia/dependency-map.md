@@ -66,7 +66,7 @@ flowchart TD
 
  subgraph DDM["DDMs Adabas"]
    DDM_BENEF[("BENEFICIARIO<br/>ARQ 150<br/>~4,2M registros")]
-   DDM_PROG[("PROGRAMA-SOCIAL<br/>ARQ 151<br/>~45 programas")]
+   DDM_PROG[("PROGRAMA-SOCIAL<br/>ARQ 155<br/>~45 programas")]
    DDM_PGTO[("PAGAMENTO<br/>ARQ 160")]
    DDM_AUDIT[("AUDITORIA<br/>ARQ 170")]
  end
@@ -74,13 +74,14 @@ flowchart TD
  CADBENEF -->|"STORE/UPDATE<br/>CADBENEF.NSN#L197,L213"| DDM_BENEF
  CADBENEF -->|"FIND<br/>CADBENEF.NSN#L139"| DDM_BENEF
  CADDEPEND -->|"FIND/UPDATE<br/>CADDEPEND.NSN#L46,L120"| DDM_BENEF
- CADPROG -->|"STORE<br/>CADPROG.NSN#L102"| DDM_PROG
+ CADPROG -->|"STORE (+ FATOR-K)<br/>CADPROG.NSN#L87-L88,L102"| DDM_PROG
  CADPROG -->|"FIND<br/>CADPROG.NSN#L77"| DDM_PROG
 
  BATCHPGT -->|READ/STORE| DDM_PGTO
  BATCHPGT -->|READ| DDM_BENEF
- BATCHPGT -->|CALLNAT| CALCBENF
- BATCHPGT -->|CALLNAT| CALCDSCT
+ BATCHPGT -->|READ| DDM_PROG
+ BATCHPGT -.->|"comentário ref<br/>(lógica inline)"| CALCBENF
+ BATCHPGT -.->|"comentário ref<br/>(lógica inline)"| CALCDSCT
  BATCHREL -->|READ| DDM_PGTO
  BATCHREL -->|READ| DDM_BENEF
  BATCHCON -->|READ/UPDATE| DDM_PGTO
@@ -178,7 +179,7 @@ flowchart LR
 
  subgraph "Adabas (DBID=57)"
    DDM_BENEF[("BENEFICIARIO<br/>FNR=150")]
-   DDM_PROG[("PROGRAMA-SOCIAL<br/>FNR=151")]
+   DDM_PROG[("PROGRAMA-SOCIAL<br/>FNR=155")]
    DDM_PGTO[("PAGAMENTO<br/>FNR=160")]
    DDM_AUDIT[("AUDITORIA<br/>FNR=170")]
  end
@@ -203,54 +204,57 @@ flowchart LR
 
 ## Tabela de Dependências
 
-| Programa | Chama (CALLNAT) | Lê (READ) DDMs | Escreve (STORE/UPDATE) DDMs | Observações |
-| --- | --- | --- | --- | --- |
-| **CADBENEF.NSN** | — (subroutine interna VALIDA-CPF) | BENEFICIARIO (FIND por CPF) | BENEFICIARIO (STORE inclusão, UPDATE alteração) | Par Visão; ARQ 150 |
-| **CADDEPEND.NSN** | — | BENEFICIARIO (FIND por CPF titular) | BENEFICIARIO (UPDATE PE group) | Par Visão; dependentes embedded no mesmo ARQ 150 |
-| **CADPROG.NSN** | — | PROGRAMA-SOCIAL (FIND por COD-PROGRAMA) | PROGRAMA-SOCIAL (STORE inclusão) | Par Visão; ARQ 155 |
-| **BATCHPGT.NSN** | CALCBENF.NSN, CALCDSCT.NSN | BENEFICIARIO, PAGAMENTO | PAGAMENTO (STORE) | Par Arquitetura; batch noturno |
-| **BATCHREL.NSN** | — | PAGAMENTO, BENEFICIARIO | — | Par Arquitetura; somente leitura |
-| **BATCHCON.NSN** | — | PAGAMENTO | PAGAMENTO (UPDATE consolidação), AUDITORIA (STORE) | Par Arquitetura |
-| **CALCBENF.NSN** | — | BENEFICIARIO, PROGRAMA-SOCIAL | — | Par Implementação; retorna valor calculado |
-| **CALCCORR.NSN** | — | PROGRAMA-SOCIAL | — | Par Implementação; correção monetária |
-| **CALCDSCT.NSN** | — | BENEFICIARIO | — | Par Implementação; regra 30% BR-013 |
-| **VALBENEF.NSN** | — | BENEFICIARIO | — | Par Qualidade; validação de elegibilidade |
-| **VALDOCS.NSN** | — | BENEFICIARIO | — | Par Qualidade; validação documental |
-| **VALELEG.NSN** | — | BENEFICIARIO, PROGRAMA-SOCIAL | — | Par Qualidade; cruza regras de elegibilidade |
-| **CONSBENEF.NSN** | — | BENEFICIARIO | — | Par Operações; somente consulta |
-| **RELPGT.NSN** | — | PAGAMENTO, BENEFICIARIO | — | Par Operações; relatório |
-| **RELAUDIT.NSN** | — | AUDITORIA | — | Par Operações; trilha de auditoria |
-
-> Linhas preenchidas pelo Par 2. Outros pares completam.
-
-| Programa | Chama (CALLNAT) | Lê (READ/FIND) DDMs | Escreve (STORE/UPDATE) DDMs | Observações |
-| ------------ | --------------- | -------------- | --------------------------- | ----------- |
-| BATCHPGT.NSN | _nenhum_ (cabeçalho cita CALCBENF/CALCDSCT mas código é inline — `BATCHPGT.NSN#L11`) | `BENEFICIARIO` (READ BY CPF), `PROGRAMA-SOCIAL` (FIND), `PAGAMENTO` (FIND) | `PAGAMENTO` (STORE) | Sub-rotina interna `DET-FAIXA-RENDA-BATCH`; lógica de cálculo duplicada inline |
-| BATCHCON.NSN | _nenhum_ | `AUDITORIA` (READ BY SEQ DESC), `PAGAMENTO` (FIND), work file CNAB 240 | `PAGAMENTO` (UPDATE), `AUDITORIA` (STORE) | Sub-rotinas internas `GRAVA-AUDITORIA-CONC`, `GRAVA-AUDITORIA-DIVERG`; bloco Banco Real comentado desde 2007 |
-| BATCHREL.NSN | _nenhum_ | `PAGAMENTO` (READ BY COMPETENCIA), `BENEFICIARIO` (FIND) | _nenhum_ (read-only — saída só em impressora) | N+1 reads no FIND BENEFICIARIO; paginação declarada mas não usada |
+| Programa | Chama (CALLNAT) | Lê (READ/FIND) DDMs | Escreve (STORE/UPDATE) DDMs | Sub-rotinas internas | Observações |
+| --- | --- | --- | --- | --- | --- |
+| **CADBENEF.NSN** | _nenhum_ | `BENEFICIARIO` (FIND por CPF) | `BENEFICIARIO` (STORE inclusão, UPDATE alteração) | `VALIDA-CPF` (módulo 11) | Par 1; ARQ 150; valida CPF, nome, DT-NASC, sexo; status 'S' se >75 anos |
+| **CADDEPEND.NSN** | _nenhum_ | `BENEFICIARIO` (FIND por CPF titular) | `BENEFICIARIO` (UPDATE PE group) | — | Par 1; dependentes embedded no mesmo ARQ 150; limite 5 dependentes |
+| **CADPROG.NSN** | _nenhum_ | `PROGRAMA-SOCIAL` (FIND por COD-PROGRAMA) | `PROGRAMA-SOCIAL` (STORE inclusão + FATOR-K) | — | Par 1; ARQ 155; calcula `FATOR-K = 1.00 + (FATOR-REAJ * 0.347215)` [BR-PROG-004] |
+| **BATCHPGT.NSN** | _nenhum_ (cabeçalho cita CALCBENF/CALCDSCT mas código é inline — L11) | `BENEFICIARIO` (READ BY CPF), `PROGRAMA-SOCIAL` (FIND), `PAGAMENTO` (FIND) | `PAGAMENTO` (STORE) | `DET-FAIXA-RENDA-BATCH` | Par 2; batch noturno; lógica de cálculo duplicada inline |
+| **BATCHCON.NSN** | _nenhum_ | `AUDITORIA` (READ BY SEQ DESC), `PAGAMENTO` (FIND), work file CNAB 240 | `PAGAMENTO` (UPDATE), `AUDITORIA` (STORE) | `GRAVA-AUDITORIA-CONC`, `GRAVA-AUDITORIA-DIVERG` | Par 2; bloco Banco Real comentado desde 2007 |
+| **BATCHREL.NSN** | _nenhum_ | `PAGAMENTO` (READ BY COMPETENCIA), `BENEFICIARIO` (FIND) | _nenhum_ (read-only — saída só em impressora) | — | Par 2; N+1 reads no FIND BENEFICIARIO |
+| **CALCBENF.NSN** | _nenhum_ | `BENEFICIARIO`, `PROGRAMA-SOCIAL` | — | — | Par 3; retorna valor calculado; não aplica fator idade [MYS-001] |
+| **CALCCORR.NSN** | _nenhum_ | `PROGRAMA-SOCIAL` | — | — | Par 3; correção monetária IPCA; tabela 2010–2014 desatualizada |
+| **CALCDSCT.NSN** | _nenhum_ | `BENEFICIARIO` | — | — | Par 3; 4 faixas desconto; teto 30% exceto tipo 'J' |
+| **VALBENEF.NSN** | _nenhum_ | `BENEFICIARIO` | — | — | Par 4; validação de elegibilidade |
+| **VALDOCS.NSN** | _nenhum_ | `BENEFICIARIO` | — | — | Par 4; validação documental |
+| **VALELEG.NSN** | _nenhum_ | `BENEFICIARIO`, `PROGRAMA-SOCIAL` | — | — | Par 4; cruza regras de elegibilidade |
+| **CONSBENEF.NSN** | _nenhum_ | `BENEFICIARIO` | — | — | Par 5; somente consulta |
+| **RELPGT.NSN** | _nenhum_ | `PAGAMENTO`, `BENEFICIARIO` | — | — | Par 5; relatório |
+| **RELAUDIT.NSN** | _nenhum_ | `AUDITORIA` | — | — | Par 5; filtra ações 'EX' — ocultadas [MYS-010] |
 
 ## Dependências Circulares
 
 > Liste aqui qualquer dependência circular encontrada (programa A chama B que chama A):
 
-- Nenhuma identificada entre os 3 batches do Par 2.
+- Nenhuma identificada entre os 15 programas NSN. Não há CALLNAT em nenhum programa.
 
 ## Programas Órfãos
 
 > Programas que não são chamados por nenhum outro (pontos de entrada diretos pelo terminal 3270 ou batch):
 
-- **CADBENEF.NSN** — entrada direta pelo terminal; não é chamado por nenhum outro NSN
-- **CADDEPEND.NSN** — entrada direta pelo terminal; não é chamado por nenhum outro NSN
-- **CADPROG.NSN** — entrada direta pelo terminal; não é chamado por nenhum outro NSN
-- **BATCHPGT.NSN** — ponto de entrada do job batch noturno; não é chamado por NSN
-- **CONSBENEF.NSN** — consulta direta pelo terminal
-- **RELPGT.NSN** — relatório direto pelo terminal ou batch
-- **RELAUDIT.NSN** — relatório direto pelo terminal ou batch
+**Todos os 15 programas são órfãos (pontos de entrada diretos).** Não existe nenhum `CALLNAT` em todo o legado SIFAP. O acoplamento é 100% via dados compartilhados em Adabas.
 
-> Nenhum programa morto identificado nos 15 NSN analisados — todos têm fluxo de entrada identificado.
+| Programa | Modo de Entrada | Notas |
+| --- | --- | --- |
+| CADBENEF.NSN | Terminal 3270 (online) | Cadastro beneficiário |
+| CADDEPEND.NSN | Terminal 3270 (online) | Cadastro dependentes |
+| CADPROG.NSN | Terminal 3270 (online) | Cadastro programas; imutável pós-cadastro |
+| BATCHPGT.NSN | Job batch noturno | Geração mensal de pagamentos |
+| BATCHCON.NSN | Job batch (após retorno BB) | Conciliação CNAB 240 |
+| BATCHREL.NSN | Job batch / Terminal | Relatório consolidado mensal |
+| CALCBENF.NSN | Terminal 3270 (online) | Simulação de cálculo interativo |
+| CALCCORR.NSN | Terminal 3270 (online) | Correção retroativa |
+| CALCDSCT.NSN | Terminal 3270 (online) | Simulação de descontos |
+| VALBENEF.NSN | Terminal 3270 (online) | Validação beneficiário |
+| VALDOCS.NSN | Terminal 3270 (online) | Validação documentos |
+| VALELEG.NSN | Terminal 3270 (online) | Validação elegibilidade |
+| CONSBENEF.NSN | Terminal 3270 (online) | Consulta beneficiário |
+| RELPGT.NSN | Terminal / Batch | Relatório pagamentos |
+| RELAUDIT.NSN | Terminal / Batch | Relatório auditoria; filtra 'EX' |
 
-- Os 3 batches do Par 2 são **pontos de entrada operacionais** (chamados por JCL/operador, não por outro `.NSN`).
-- Suspeita: deve existir um 4º programa de **remessa CNAB de envio** ao BB — nenhum dos 3 batches gera esse arquivo. Investigar com PO/EA.
+> **Achado-chave:** O comentário no cabeçalho de BATCHPGT (L11) cita "CALLNAT CALCBENF" e "CALLNAT CALCDSCT", mas a lógica foi duplicada inline (sub-rotina `DET-FAIXA-RENDA-BATCH`). Provável refatoração abandonada.
+
+> **Suspeita:** deve existir um programa de **remessa CNAB de envio** ao BB — nenhum dos 15 programas gera esse arquivo. Investigar com PO/EA.
 
 ---
 
