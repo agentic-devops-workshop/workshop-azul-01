@@ -28,7 +28,9 @@
 
 ## Diagrama de Dependências entre Programas
 
-> Substitua o exemplo abaixo pelo mapa real do seu time. **Meta:** cobrir todos os 15 programas, sem órfãos.
+> **Contribuição Par 2 (Arquitetura):** mapa dos 3 batches do ciclo mensal de pagamentos. Outros pares completam com seus programas.
+>
+> **Achado-chave:** nenhum `CALLNAT` entre os 3 batches. Acoplamento é puramente via **tabelas Adabas compartilhadas** (contrato implícito de dados).
 
 ```mermaid
 flowchart TD
@@ -100,6 +102,63 @@ flowchart TD
  RELAUDIT -->|READ| DDM_AUDIT
 ```
 
+flowchart LR
+ classDef batch fill:#FFF7E0,stroke:#FFB900,color:#0A0A0A
+ classDef view fill:#E5F6FD,stroke:#00A4EF,color:#0A0A0A
+ classDef ext fill:#F1F8E3,stroke:#7FBA00,color:#0A0A0A
+
+ PGT[BATCHPGT<br/>geração mensal]:::batch
+ CON[BATCHCON<br/>conciliação CNAB]:::batch
+ REL[BATCHREL<br/>relatório consolidado]:::batch
+
+ BEN[(BENEFICIARIO)]:::view
+ PAG[(PAGAMENTO)]:::view
+ PRG[(PROGRAMA-SOCIAL)]:::view
+ AUD[(AUDITORIA)]:::view
+ CNAB[/Arquivo CNAB 240 BB/]:::ext
+
+ PGT -- READ BY CPF --> BEN
+ PGT -- FIND --> PRG
+ PGT -- FIND/STORE --> PAG
+
+ CNAB -- READ WORK FILE --> CON
+ CON -- FIND/UPDATE --> PAG
+ CON -- STORE --> AUD
+
+ REL -- READ BY COMPETENCIA --> PAG
+ REL -- FIND --> BEN
+```
+
+### Fluxo de negócio consolidado (sequence)
+
+```mermaid
+sequenceDiagram
+ autonumber
+ participant OPS as Operador SIFAP
+ participant PGT as BATCHPGT
+ participant DB as Adabas
+ participant BB as Banco do Brasil
+ participant CON as BATCHCON
+ participant AUD as AUDITORIA
+ participant REL as BATCHREL
+
+ Note over OPS,PGT: 1º dia útil do mês
+ OPS->>PGT: executa (usa *DATN)
+ PGT->>DB: READ BENEFICIARIO BY CPF + FIND PROGRAMA
+ PGT->>DB: STORE PAGAMENTO (STATUS='G')
+ Note over PGT,BB: arquivo de remessa NÃO encontrado nos 3 batches → MISTÉRIO
+ BB-->>CON: retorno CNAB 240 (dias depois)
+ OPS->>CON: executa (INPUT competência + arquivo)
+ CON->>DB: FIND PAGAMENTO (NUM-PAGTO+CPF+COMPETENCIA)
+ CON->>DB: UPDATE PAGAMENTO (STATUS = P/D/E)
+ CON->>AUD: STORE AUDITORIA (CO ou DV)
+ OPS->>REL: executa (INPUT competência)
+ REL->>DB: READ PAGAMENTO + FIND BENEFICIARIO
+ REL-->>OPS: relatório impresso
+```
+
+> **Instrução:** outros pares devem complementar com seus 12 programas restantes.
+
 ## Diagrama de Fluxo de Dados (DDMs)
 
 ```mermaid
@@ -162,11 +221,19 @@ flowchart LR
 | **RELPGT.NSN** | — | PAGAMENTO, BENEFICIARIO | — | Par Operações; relatório |
 | **RELAUDIT.NSN** | — | AUDITORIA | — | Par Operações; trilha de auditoria |
 
+> Linhas preenchidas pelo Par 2. Outros pares completam.
+
+| Programa | Chama (CALLNAT) | Lê (READ/FIND) DDMs | Escreve (STORE/UPDATE) DDMs | Observações |
+| ------------ | --------------- | -------------- | --------------------------- | ----------- |
+| BATCHPGT.NSN | _nenhum_ (cabeçalho cita CALCBENF/CALCDSCT mas código é inline — `BATCHPGT.NSN#L11`) | `BENEFICIARIO` (READ BY CPF), `PROGRAMA-SOCIAL` (FIND), `PAGAMENTO` (FIND) | `PAGAMENTO` (STORE) | Sub-rotina interna `DET-FAIXA-RENDA-BATCH`; lógica de cálculo duplicada inline |
+| BATCHCON.NSN | _nenhum_ | `AUDITORIA` (READ BY SEQ DESC), `PAGAMENTO` (FIND), work file CNAB 240 | `PAGAMENTO` (UPDATE), `AUDITORIA` (STORE) | Sub-rotinas internas `GRAVA-AUDITORIA-CONC`, `GRAVA-AUDITORIA-DIVERG`; bloco Banco Real comentado desde 2007 |
+| BATCHREL.NSN | _nenhum_ | `PAGAMENTO` (READ BY COMPETENCIA), `BENEFICIARIO` (FIND) | _nenhum_ (read-only — saída só em impressora) | N+1 reads no FIND BENEFICIARIO; paginação declarada mas não usada |
+
 ## Dependências Circulares
 
 > Liste aqui qualquer dependência circular encontrada (programa A chama B que chama A):
 
-- Nenhuma encontrada até agora.
+- Nenhuma identificada entre os 3 batches do Par 2.
 
 ## Programas Órfãos
 
@@ -181,6 +248,9 @@ flowchart LR
 - **RELAUDIT.NSN** — relatório direto pelo terminal ou batch
 
 > Nenhum programa morto identificado nos 15 NSN analisados — todos têm fluxo de entrada identificado.
+
+- Os 3 batches do Par 2 são **pontos de entrada operacionais** (chamados por JCL/operador, não por outro `.NSN`).
+- Suspeita: deve existir um 4º programa de **remessa CNAB de envio** ao BB — nenhum dos 3 batches gera esse arquivo. Investigar com PO/EA.
 
 ---
 
