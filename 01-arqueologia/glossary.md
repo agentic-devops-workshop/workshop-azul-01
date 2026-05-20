@@ -41,36 +41,41 @@ Prompt útil no Copilot Chat (cole o conteúdo de 2–3 arquivos `.NSN` no chat 
 
 | #   | Termo | Expansão | Programa | Contexto |
 | --- | ----- | -------- | -------- | -------- |
-| 1   |       |          |          |          |
-| 2   |       |          |          |          |
-| 3   |       |          |          |          |
-| 4   |       |          |          |          |
-| 5   |       |          |          |          |
-| 6   |       |          |          |          |
-| 7   |       |          |          |          |
-| 8   |       |          |          |          |
-| 9   |       |          |          |          |
-| 10  |       |          |          |          |
-| 11  |       |          |          |          |
-| 12  |       |          |          |          |
-| 13  |       |          |          |          |
-| 14  |       |          |          |          |
-| 15  |       |          |          |          |
-| 16  |       |          |          |          |
-| 17  |       |          |          |          |
-| 18  |       |          |          |          |
-| 19  |       |          |          |          |
-| 20  |       |          |          |          |
-| 21  |       |          |          |          |
-| 22  |       |          |          |          |
-| 23  |       |          |          |          |
-| 24  |       |          |          |          |
-| 25  |       |          |          |          |
-| 26  |       |          |          |          |
-| 27  |       |          |          |          |
-| 28  |       |          |          |          |
-| 29  |       |          |          |          |
-| 30  |       |          |          |          |
+| 1   | `BENEF` | Beneficiário | `CADBENEF.NSN`, `BENEFICIARIO.ddm` | Pessoa cadastrada em programa social do SIFAP |
+| 2   | `CADBENEF` | Cadastro de Beneficiário | `CADBENEF.NSN` | Programa de inclusão/alteração de beneficiário (ARQ 150) |
+| 3   | `CADDEPEND` | Cadastro de Dependentes | `CADDEPEND.NSN` | Programa de vinculação de dependentes ao beneficiário titular |
+| 4   | `CADPROG` | Cadastro de Programas | `CADPROG.NSN` | Programa de inclusão/consulta de programas sociais (ARQ 155) |
+| 5   | `CPF` | Cadastro de Pessoa Física | `CADBENEF.NSN#L105`, `BENEFICIARIO.ddm#L21` | Número identificador do beneficiário; validado por módulo 11 |
+| 6   | `NIS` | Número de Identificação Social | `CADBENEF.NSN#L51`, `BENEFICIARIO.ddm` | Identificador único do beneficiário nos programas sociais |
+| 7   | `STATUS` | Situação do Beneficiário | `CADBENEF.NSN#L163`, `BENEFICIARIO.ddm#L52` | A=Ativo, S=Suspenso/Idoso>75, C=Cancelado, I=Inativo, D=Desligado |
+| 8   | `COD-PROGRAMA` | Código do Programa Social | `CADBENEF.NSN#L44`, `CADPROG.NSN#L14` | Identificador do programa ao qual o beneficiário está vinculado |
+| 9   | `PE` | Periodic Group (Grupo Periódico Adabas) | `CADDEPEND.NSN#L18`, `BENEFICIARIO.ddm#L61` | Estrutura repetitiva de dependentes; DDM suporta até 10 ocorrências |
+| 10  | `PARENTESCO` | Vínculo familiar do dependente | `CADDEPEND.NSN#L72` | Domínio no programa: FI=Filho, CO=Cônjuge, IR=Irmão, OU=Outro |
+| 11  | `FATOR-K` | Fator de Correção Especial | `CADPROG.NSN#L87`, `PROGRAMA-SOCIAL.ddm#L39` | Multiplicador de valor base; não documentado; inserido em 2008 por solicitação da SENARC |
+| 12  | `FATOR-REAJ` | Fator de Reajuste | `CADPROG.NSN#L88` | Percentual de reajuste do programa; aplicado via fórmula `FATOR-K = 1.00 + (FATOR-REAJ * 0.347215)` |
+| 13  | `VLR-BASE` | Valor Base do Benefício | `CADPROG.NSN#L87`, `PROGRAMA-SOCIAL.ddm#L30` | Valor mensal calculado após aplicação do fator K; gravado no ARQ 155 |
+| 14  | `ARQ 150` | Arquivo/Base de Beneficiários | `CADBENEF.NSN#L9` | Base principal do SIFAP (~4,2 milhões de registros); DDM BENEFICIARIO, DBID=57 FNR=150 |
+| 15  | `ARQ 155` | Arquivo/Base de Programas Sociais | `CADPROG.NSN#L9` | Tabela paramétrica de programas; DDM PROGRAMA-SOCIAL, DBID=57 FNR=151 |
+| 16  | `DT-NASC` | Data de Nascimento | `CADBENEF.NSN#L126`, `BENEFICIARIO.ddm#L19` | Formato AAAAMMDD; usada para cálculo de idade e regra de status idoso |
+| 17  | `#IDADE` | Idade Calculada | `CADBENEF.NSN#L157` | Variável local; calculada como `ANO-ATUAL - ANO-NASC`; usada para definir status S |
+| 18  | `COD-REGIAO` | Código de Região | `CADBENEF.NSN#L50`, `BENEFICIARIO.ddm#L37` | 01 a 05 = regiões do Brasil + 99 = especial; influencia regionalização de benefícios |
+| 19  | `RENDA-FAMILIAR` | Renda Familiar Declarada | `CADBENEF.NSN#L47`, `BENEFICIARIO.ddm#L55` | Renda total declarada pelo núcleo familiar; usada para elegibilidade |
+| 20  | `NUM-DEPENDENTES` | Número de Dependentes | `CADDEPEND.NSN#L19`, `BENEFICIARIO.ddm` | Contador de dependentes vinculados; limite de 5 pelo programa, 10 pelo DDM |
+| 21  | `OPER` | Tipo de Operação | `CADBENEF.NSN#L56`, `CADPROG.NSN#L48` | I=Inclusão, A=Alteração, C=Consulta |
+| 22  | `STORE` | Gravar registro novo (Adabas) | `CADBENEF.NSN#L197` | Equivalente ao INSERT no banco de dados; sempre seguido de END TRANSACTION |
+| 23  | `UPDATE` | Atualizar registro existente (Adabas) | `CADBENEF.NSN#L213`, `CADDEPEND.NSN#L120` | Equivalente ao UPDATE; requer FIND prévio |
+| 24  | `FIND` | Buscar registro por descritor (Adabas) | `CADBENEF.NSN#L139` | Busca por campo DE (Descriptor); equivale ao SELECT com WHERE |
+| 25  | `END TRANSACTION` | Commit da transação Adabas | `CADBENEF.NSN#L199`, `CADDEPEND.NSN#L122` | Confirmação da gravação; equivale ao COMMIT |
+| 26  | `COD-ELEGIBILIDADE` | Código de Elegibilidade do Programa | `CADPROG.NSN#L18`, `PROGRAMA-SOCIAL.ddm#L47` | Código que define critérios de acesso ao programa; mapeamento incompleto no DDM |
+| 27  | `SIT-BENEFICIARIO` | Situação do Beneficiário (DDM) | `BENEFICIARIO.ddm#L52` | A=Ativo, S=Suspenso, C=Cancelado, I=Inativo, D=Desligado; campo CE no DDM |
+| 28  | `IND-BIOMETRIA` | Indicador de Biometria | `BENEFICIARIO.ddm#L73` | S=Sim, N=Não, P=Pendente; campo FA; adicionado em 2005 |
+| 29  | `HASH-DIGITAL` | Hash de Template Biométrico | `BENEFICIARIO.ddm#L76` | SHA-256 do template; campo FD; status: NAO IMPLEMENTADO |
+| 30  | `SENARC` | Secretaria Nacional de Renda de Cidadania | `PROGRAMA-SOCIAL.ddm#L42` | Órgão responsável pela autorização de alterações no FATOR-K |
+| 31  | `MDAS` | Ministério do Desenvolvimento e Assistência Social | `PROGRAMA-SOCIAL.ddm#L11` | Órgão gestor dos programas sociais |
+| 32  | `DE` | Descriptor (Adabas) | `BENEFICIARIO.ddm#L22` | Campo indexado para busca por FIND; equivale a coluna indexada no SQL |
+| 33  | `GRP-DEPENDENTE` | Grupo de Dependentes (Adabas) | `BENEFICIARIO.ddm#L61` | Grupo periódico DA; armazena até 10 dependentes por beneficiário |
+| 34  | `VLR-TETO-BENEF` | Valor Teto do Benefício | `PROGRAMA-SOCIAL.ddm#L32` | Valor máximo que um beneficiário pode receber no programa |
+| 35  | `MOD11` | Módulo 11 (Algoritmo de Validação) | `CADBENEF.NSN#L224` | Algoritmo de validação de CPF por dígito verificador; subroutine VALIDA-CPF |
 
 > Adicione mais linhas conforme necessário. Não se limite a 30!
 
