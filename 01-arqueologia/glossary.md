@@ -39,7 +39,7 @@ Prompt útil no Copilot Chat (cole o conteúdo de 2–3 arquivos `.NSN` no chat 
 
 ## Termos encontrados
 
-> **Contribuição Par 2 (Arquitetura — EA + SA):** 30 termos extraídos dos 3 batches e DDMs relacionados.
+> **Contribuição Pares (Arquitetura — EA + SA):** 34 termos extraídos dos 3 batches e DDMs relacionados.
 
 | #   | Termo | Expansão | Programa | Contexto |
 | --- | ----- | -------- | -------- | -------- |

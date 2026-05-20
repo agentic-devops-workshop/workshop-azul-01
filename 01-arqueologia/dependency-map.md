@@ -66,7 +66,7 @@ flowchart TD
 
  subgraph DDM["DDMs Adabas"]
    DDM_BENEF[("BENEFICIARIO<br/>ARQ 150<br/>~4,2M registros")]
-   DDM_PROG[("PROGRAMA-SOCIAL<br/>ARQ 151<br/>~45 programas")]
+   DDM_PROG[("PROGRAMA-SOCIAL<br/>ARQ 155<br/>~45 programas")]
    DDM_PGTO[("PAGAMENTO<br/>ARQ 160")]
    DDM_AUDIT[("AUDITORIA<br/>ARQ 170")]
  end
@@ -74,13 +74,14 @@ flowchart TD
  CADBENEF -->|"STORE/UPDATE<br/>CADBENEF.NSN#L197,L213"| DDM_BENEF
  CADBENEF -->|"FIND<br/>CADBENEF.NSN#L139"| DDM_BENEF
  CADDEPEND -->|"FIND/UPDATE<br/>CADDEPEND.NSN#L46,L120"| DDM_BENEF
- CADPROG -->|"STORE<br/>CADPROG.NSN#L102"| DDM_PROG
+ CADPROG -->|"STORE (+ FATOR-K)<br/>CADPROG.NSN#L87-L88,L102"| DDM_PROG
  CADPROG -->|"FIND<br/>CADPROG.NSN#L77"| DDM_PROG
 
  BATCHPGT -->|READ/STORE| DDM_PGTO
  BATCHPGT -->|READ| DDM_BENEF
- BATCHPGT -->|CALLNAT| CALCBENF
- BATCHPGT -->|CALLNAT| CALCDSCT
+ BATCHPGT -->|READ| DDM_PROG
+ BATCHPGT -.->|"comentário ref<br/>(lógica inline)"| CALCBENF
+ BATCHPGT -.->|"comentário ref<br/>(lógica inline)"| CALCDSCT
  BATCHREL -->|READ| DDM_PGTO
  BATCHREL -->|READ| DDM_BENEF
  BATCHCON -->|READ/UPDATE| DDM_PGTO
@@ -178,7 +179,7 @@ flowchart LR
 
  subgraph "Adabas (DBID=57)"
    DDM_BENEF[("BENEFICIARIO<br/>FNR=150")]
-   DDM_PROG[("PROGRAMA-SOCIAL<br/>FNR=151")]
+   DDM_PROG[("PROGRAMA-SOCIAL<br/>FNR=155")]
    DDM_PGTO[("PAGAMENTO<br/>FNR=160")]
    DDM_AUDIT[("AUDITORIA<br/>FNR=170")]
  end
@@ -200,6 +201,8 @@ flowchart LR
  PROG_BATCH --> DDM_BENEF
  PROG_BATCH --> DDM_AUDIT
 ```
+
+> DDMs preenchidos com os nomes reais encontrados em [`../01-arqueologia/legado-sifap/adabas-ddms/`](../01-arqueologia/legado-sifap/adabas-ddms/).
 
 ## Tabela de Dependências
 
@@ -233,24 +236,35 @@ flowchart LR
 
 > Liste aqui qualquer dependência circular encontrada (programa A chama B que chama A):
 
-- Nenhuma identificada entre os 3 batches do Par 2.
+- Nenhuma identificada entre os 15 programas NSN. Não há CALLNAT em nenhum programa.
 
 ## Programas Órfãos
 
 > Programas que não são chamados por nenhum outro (pontos de entrada diretos pelo terminal 3270 ou batch):
 
-- **CADBENEF.NSN** — entrada direta pelo terminal; não é chamado por nenhum outro NSN
-- **CADDEPEND.NSN** — entrada direta pelo terminal; não é chamado por nenhum outro NSN
-- **CADPROG.NSN** — entrada direta pelo terminal; não é chamado por nenhum outro NSN
-- **BATCHPGT.NSN** — ponto de entrada do job batch noturno; não é chamado por NSN
-- **CONSBENEF.NSN** — consulta direta pelo terminal
-- **RELPGT.NSN** — relatório direto pelo terminal ou batch
-- **RELAUDIT.NSN** — relatório direto pelo terminal ou batch
+**Todos os 15 programas são órfãos (pontos de entrada diretos).** Não existe nenhum `CALLNAT` em todo o legado SIFAP. O acoplamento é 100% via dados compartilhados em Adabas.
 
-> Nenhum programa morto identificado nos 15 NSN analisados — todos têm fluxo de entrada identificado.
+| Programa | Modo de Entrada | Notas |
+| --- | --- | --- |
+| CADBENEF.NSN | Terminal 3270 (online) | Cadastro beneficiário |
+| CADDEPEND.NSN | Terminal 3270 (online) | Cadastro dependentes |
+| CADPROG.NSN | Terminal 3270 (online) | Cadastro programas; imutável pós-cadastro |
+| BATCHPGT.NSN | Job batch noturno | Geração mensal de pagamentos |
+| BATCHCON.NSN | Job batch (após retorno BB) | Conciliação CNAB 240 |
+| BATCHREL.NSN | Job batch / Terminal | Relatório consolidado mensal |
+| CALCBENF.NSN | Terminal 3270 (online) | Simulação de cálculo interativo |
+| CALCCORR.NSN | Terminal 3270 (online) | Correção retroativa |
+| CALCDSCT.NSN | Terminal 3270 (online) | Simulação de descontos |
+| VALBENEF.NSN | Terminal 3270 (online) | Validação beneficiário |
+| VALDOCS.NSN | Terminal 3270 (online) | Validação documentos |
+| VALELEG.NSN | Terminal 3270 (online) | Validação elegibilidade |
+| CONSBENEF.NSN | Terminal 3270 (online) | Consulta beneficiário |
+| RELPGT.NSN | Terminal / Batch | Relatório pagamentos |
+| RELAUDIT.NSN | Terminal / Batch | Relatório auditoria; filtra 'EX' |
 
-- Os 3 batches do Par 2 são **pontos de entrada operacionais** (chamados por JCL/operador, não por outro `.NSN`).
-- Suspeita: deve existir um 4º programa de **remessa CNAB de envio** ao BB — nenhum dos 3 batches gera esse arquivo. Investigar com PO/EA.
+> **Achado-chave:** O comentário no cabeçalho de BATCHPGT (L11) cita "CALLNAT CALCBENF" e "CALLNAT CALCDSCT", mas a lógica foi duplicada inline (sub-rotina `DET-FAIXA-RENDA-BATCH`). Provável refatoração abandonada.
+
+> **Suspeita:** deve existir um programa de **remessa CNAB de envio** ao BB — nenhum dos 15 programas gera esse arquivo. Investigar com PO/EA.
 
 ---
 

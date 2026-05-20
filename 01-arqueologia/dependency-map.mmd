@@ -1,0 +1,29 @@
+flowchart LR
+ classDef batch fill:#FFF7E0,stroke:#FFB900,color:#0A0A0A
+ classDef view fill:#E5F6FD,stroke:#00A4EF,color:#0A0A0A
+ classDef ext fill:#F1F8E3,stroke:#7FBA00,color:#0A0A0A
+
+ PGT[BATCHPGT<br/>geracao mensal]:::batch
+ CON[BATCHCON<br/>conciliacao CNAB]:::batch
+ REL[BATCHREL<br/>relatorio consolidado]:::batch
+
+ BEN[(BENEFICIARIO)]:::view
+ PAG[(PAGAMENTO)]:::view
+ PRG[(PROGRAMA-SOCIAL)]:::view
+ AUD[(AUDITORIA)]:::view
+ CNAB[/Arquivo CNAB 240 BB/]:::ext
+
+ PGT -- READ BY CPF --> BEN
+ PGT -- FIND --> PRG
+ PGT -- FIND/STORE --> PAG
+
+ CNAB -- READ WORK FILE --> CON
+ CON -- FIND/UPDATE --> PAG
+ CON -- STORE --> AUD
+
+ REL -- READ BY COMPETENCIA --> PAG
+ REL -- FIND --> BEN
+
+ UI[Terminal 3270] --> PGT
+ UI --> CON
+ UI --> REL
