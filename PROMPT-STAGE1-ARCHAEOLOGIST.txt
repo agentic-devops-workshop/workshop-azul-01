@@ -1,0 +1,10 @@
+Estou no Par 1 (Visão) do workshop SIFAP. 
+Começamos o Estágio 1 — Arqueologia.
+Vou ler 3 programas: CADBENEF.NSN, CADDEPEND.NSN, CADPROG.NSN.
+Ajude-me a:
+1. Entender a entrada → processamento → saída de cada um
+2. Extrair regras de negócio com evidência (arquivo+linha)
+3. Registrar mistérios (coisas que não entendi)
+4. Mapear campos do Adabas DDM para tabelas PostgreSQL
+
+Por onde começamos?

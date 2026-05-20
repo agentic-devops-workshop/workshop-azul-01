@@ -44,6 +44,38 @@ O que NÃO conta: paginação de relatório, formatação de saída, manipulaç�
 
 ## Regras Encontradas
 
+### Par 1 · CADBENEF — Cadastro de beneficiários
+
+| ID | Regra de Negócio | Programa Fonte | Campos DDM | Nível de Risco | Notas |
+| --- | --- | --- | --- | --- | --- |
+| BR-BENEF-001 | CPF é obrigatório e deve ser válido pelo algoritmo módulo 11 (dois dígitos verificadores) | `01-arqueologia/legado-sifap/natural-programs/CADBENEF.NSN#L105-L112` | `BENEFICIARIO.NUM-CPF` | CRÍTICO | Regra adicionada em 2005 por MARCIA HELENA; falha na validação rejeita o cadastro |
+| BR-BENEF-002 | Operação de cadastro aceita apenas I (Inclusão) ou A (Alteração); qualquer outro valor aborta | `01-arqueologia/legado-sifap/natural-programs/CADBENEF.NSN#L79-L83` | — | ALTO | Controle de fluxo principal do programa |
+| BR-BENEF-003 | Em inclusão, CPF não pode já existir na base (ARQ 150); em alteração, CPF deve existir | `01-arqueologia/legado-sifap/natural-programs/CADBENEF.NSN#L139-L148` | `BENEFICIARIO.NUM-CPF` | CRÍTICO | Evita duplicidade; regra de integridade da base de 4,2M registros |
+| BR-BENEF-004 | Nome, data de nascimento e sexo são obrigatórios no cadastro | `01-arqueologia/legado-sifap/natural-programs/CADBENEF.NSN#L119-L131` | `BENEFICIARIO.NOME-COMPLETO`, `BENEFICIARIO.DT-NASCIMENTO`, `BENEFICIARIO.SEXO` | ALTO | Sexo aceito: M ou F (DDM define M/F/I mas programa não aceita I) |
+| BR-BENEF-005 | Status inicial de inclusão é sempre 'A' (Ativo) | `01-arqueologia/legado-sifap/natural-programs/CADBENEF.NSN#L163-L165` | `BENEFICIARIO.SIT-BENEFICIARIO` | ALTO | Status não é informado pelo usuário; definido pelo sistema |
+| BR-BENEF-006 | Beneficiário com idade calculada acima de 75 anos recebe status 'S' na inclusão | `01-arqueologia/legado-sifap/natural-programs/CADBENEF.NSN#L167-L169` | `BENEFICIARIO.SIT-BENEFICIARIO`, `BENEFICIARIO.DT-NASCIMENTO` | CRÍTICO | Conflito: DDM define 'S' como Suspenso; programa usa 'S' como categoria etária de idoso — semântica divergente |
+
+### Par 1 · CADDEPEND — Cadastro de dependentes
+
+| ID | Regra de Negócio | Programa Fonte | Campos DDM | Nível de Risco | Notas |
+| --- | --- | --- | --- | --- | --- |
+| BR-DEP-001 | Inclusão de dependente exige que o titular (CPF) exista e esteja ativo na base | `01-arqueologia/legado-sifap/natural-programs/CADDEPEND.NSN#L46-L56` | `BENEFICIARIO.SIT-BENEFICIARIO` | ALTO | Titular com status C (Cancelado) ou D (Desligado) bloqueia qualquer inclusão de dependente |
+| BR-DEP-002 | Limite máximo de 5 dependentes por beneficiário titular | `01-arqueologia/legado-sifap/natural-programs/CADDEPEND.NSN#L63-L66` | `BENEFICIARIO.GRP-DEPENDENTE` | ALTO | DDM comporta até 10 ocorrências (PE); limite de 5 é regra do programa — possível limitação de tela, não de negócio |
+| BR-DEP-003 | Parentesco do dependente deve ser: FI (Filho), CO (Cônjuge), IR (Irmão) ou OU (Outro) | `01-arqueologia/legado-sifap/natural-programs/CADDEPEND.NSN#L72-L84` | `BENEFICIARIO.PARENTESCO` | MÉDIO | DDM define domínio diferente: FI/CJ/NT/TU — divergência que pode impactar relatórios históricos |
+| BR-DEP-004 | CPF de dependente não pode ser duplicado dentro do mesmo titular (quando informado) | `01-arqueologia/legado-sifap/natural-programs/CADDEPEND.NSN#L97-L104` | `BENEFICIARIO.CPF-DEPENDENTE` | ALTO | Apenas quando CPF ≠ 0; dependente sem CPF pode ser cadastrado sem validação de unicidade |
+| BR-DEP-005 | Dependente sem nome é rejeitado; nome é obrigatório | `01-arqueologia/legado-sifap/natural-programs/CADDEPEND.NSN#L86-L90` | `BENEFICIARIO.NOME-DEPENDENTE` | MÉDIO | Única validação obrigatória de dependente além do parentesco |
+
+### Par 1 · CADPROG — Cadastro de programas sociais
+
+| ID | Regra de Negócio | Programa Fonte | Campos DDM | Nível de Risco | Notas |
+| --- | --- | --- | --- | --- | --- |
+| BR-PROG-001 | Programa social não pode ser cadastrado com código já existente na base (ARQ 155) | `01-arqueologia/legado-sifap/natural-programs/CADPROG.NSN#L77-L82` | `PROGRAMA-SOCIAL.COD-PROGRAMA` | ALTO | Código é chave primária do arquivo de programas |
+| BR-PROG-002 | Status inicial de inclusão de programa é sempre 'A' (Ativo) | `01-arqueologia/legado-sifap/natural-programs/CADPROG.NSN#L97` | `PROGRAMA-SOCIAL.SIT-PROGRAMA` | MÉDIO | Não há transição de status no CADPROG; apenas outros módulos alteram status |
+| BR-PROG-003 | Operações de CADPROG aceitam apenas I (Inclusão) e C (Consulta); sem alteração/exclusão | `01-arqueologia/legado-sifap/natural-programs/CADPROG.NSN#L48-L56` | — | ALTO | Programas são imutáveis após cadastro neste módulo |
+| BR-PROG-004 | Valor base do programa é calculado: `FATOR-K = 1.00 + (FATOR-REAJ * 0.347215)`; valor gravado é `VLR-BASE * FATOR-K` | `01-arqueologia/legado-sifap/natural-programs/CADPROG.NSN#L87-L88` | `PROGRAMA-SOCIAL.FATOR-K`, `PROGRAMA-SOCIAL.VLR-BASE-INDIVIDUAL` | CRÍTICO | Constante 0.347215 sem documentação de origem normativa; fórmula introduzida em 2003 |
+| BR-PROG-005 | Tipo de programa deve ser A (Assistencial), P (Previdenciário) ou T (Trabalho) | `01-arqueologia/legado-sifap/natural-programs/CADPROG.NSN#L20` | `PROGRAMA-SOCIAL.TIPO-PROGRAMA` | MÉDIO | Definição de tipo impacta regras de elegibilidade e cálculo de benefício |
+| BR-PROG-006 | Data de fim de programa = 0 indica vigência indeterminada | `01-arqueologia/legado-sifap/natural-programs/CADPROG.NSN#L70` | `PROGRAMA-SOCIAL.DT-ENCERRAMENTO` | MÉDIO | Convenção 0 = sem prazo; no modelo relacional deve mapear para NULL |
+
 ### Par 2 · BATCHPGT — Geração mensal de pagamentos
 
 | ID | Regra de Negócio | Programa Fonte | Campos DDM | Nível de Risco | Notas |
@@ -149,6 +181,7 @@ O que NÃO conta: paginação de relatório, formatação de saída, manipulaç�
 | BR-PGT-013 | Abono 15% em dezembro (programas tipo `'A'`) | BATCHPGT |
 | BR-PGT-014 | Desconto 3% do bruto quando > R$ 500 | BATCHPGT |
 | BR-PGT-015 | Líquido nunca negativo (clamp em zero) | BATCHPGT |
+| BR-PROG-004 | `FATOR-K = 1.00 + (FATOR-REAJ * 0.347215)` | CADPROG |
 | BR-CALC-001 | Fator regional (mesma tabela de PGT-006) | CALCBENF |
 | BR-CALC-002 | Fator familiar (mesmo de PGT-007) | CALCBENF |
 | BR-CALC-003 | Fator renda (mesmo de PGT-008) | CALCBENF |
@@ -164,6 +197,9 @@ O que NÃO conta: paginação de relatório, formatação de saída, manipulaç�
 
 | ID | Resumo | Fonte |
 | --- | --- | --- |
+| BR-BENEF-005 | Status inicial de inclusão = 'A' (Ativo) | CADBENEF |
+| BR-BENEF-006 | Beneficiário >75 anos recebe status 'S' na inclusão | CADBENEF |
+| BR-PROG-002 | Status inicial de programa = 'A' (Ativo) | CADPROG |
 | BR-PGT-003 | `STATUS = 'A'` para processar beneficiário | BATCHPGT |
 | BR-PGT-005 | `STATUS-PROG = 'A'` para processar programa | BATCHPGT |
 | BR-PGT-016 | Pagamento nasce com `STATUS-PGTO = 'G'` | BATCHPGT |
@@ -174,6 +210,14 @@ O que NÃO conta: paginação de relatório, formatação de saída, manipulaç�
 | BR-CALC-005 | Beneficiário e programa devem estar ativos | CALCBENF |
 | BR-CORR-002 | `IND-CORRIGIDO = 'S'` impede reprocessamento | CALCCORR |
 
+### Regras de Autorização / Controle de Acesso
+
+| ID | Resumo | Fonte |
+| --- | --- | --- |
+| BR-BENEF-002 | Operação aceita apenas I ou A; qualquer outro valor aborta | CADBENEF |
+| BR-DEP-001 | Titular com status C ou D bloqueia inclusão de dependente | CADDEPEND |
+| BR-PROG-003 | CADPROG aceita apenas I (Inclusão) e C (Consulta); sem alteração | CADPROG |
+
 ### Regras Temporais (Periodicidade / Vigência)
 
 | ID | Resumo | Fonte |
@@ -182,6 +226,7 @@ O que NÃO conta: paginação de relatório, formatação de saída, manipulaç�
 | BR-PGT-012 | 13º somente em dezembro (`#MES = 12`) | BATCHPGT |
 | BR-PGT-013 | Abono 15% somente em dezembro, programas tipo `'A'` | BATCHPGT |
 | BR-PGT-018 | Idade por ano apenas (`#ANO − #ANO-NASC`) | BATCHPGT |
+| BR-PROG-006 | Data de fim = 0 indica vigência indeterminada | CADPROG |
 | BR-DSCT-004 | Vigência de descontos (datas início/fim) | CALCDSCT |
 | BR-CON-004 | Competência informada via INPUT na conciliação | BATCHCON |
 
@@ -252,16 +297,16 @@ para reutilizar DiscountCalculationService.
 
 | Métrica | Valor |
 | --- | --- |
-| Total de regras catalogadas | **54** (18 PGT + 11 CON + 5 REL + 6 CALC + 5 DSCT + 3 CORR + 2 DDM + 4 cross-ref na tabela) |
-| Regras nível CRÍTICO | **22** |
-| Regras nível ALTO | **21** |
-| Regras nível MÉDIO | **8** |
+| Total de regras catalogadas | **71** (6 BENEF + 5 DEP + 6 PROG + 18 PGT + 11 CON + 5 REL + 6 CALC + 5 DSCT + 3 CORR + 2 DDM + 4 cross-ref) |
+| Regras nível CRÍTICO | **27** |
+| Regras nível ALTO | **27** |
+| Regras nível MÉDIO | **14** |
 | Regras nível BAIXO | **1** |
-| Divergências identificadas | **3** (desconto, arredondamento, fator idade) |
+| Divergências identificadas | **4** (desconto, arredondamento, fator idade, parentesco DDM vs programa) |
 | Mistérios mapeados | **10** (vinculados a mysteries-found.md) |
 | Easter Eggs encontrados | **1/3** (Plano Verão 1989–1991 em CALCCORR) |
-| Programas cobertos | **6/15** (Par 2 + Par 3) |
-| Programas pendentes | **9** (Pares 1, 4, 5) |
+| Programas cobertos | **9/15** (Par 1 + Par 2 + Par 3) |
+| Programas pendentes | **6** (Pares 4, 5: VALBENEF, VALDOCS, VALELEG, CONSBENF, RELPGT, RELAUDIT) |
 
 ---
 
