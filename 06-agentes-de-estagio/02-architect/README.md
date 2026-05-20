@@ -5,8 +5,6 @@
 ![MUNDO 2 de 4](https://img.shields.io/badge/MUNDO-2%20de%204-00A4EF?style=for-the-badge) ![AGENTE @architect](https://img.shields.io/badge/AGENTE-@architect-1A1A1A?style=for-the-badge) ![ESTÁGIO 2](https://img.shields.io/badge/ESTÁGIO-2-737373?style=for-the-badge)
 
 > 🗺 **Você está aqui:** [Kit PT-BR](../../README.md) → [Agentes](../README.md) → **@architect**
-
-
 > **Para quem é isto?** Para o Par 2 (EA+SA) durante o Estágio 2.
 >
 > **O que você terá ao final desta leitura:**
@@ -80,25 +78,12 @@ C4, ADRs e plano técnico para Java 21 + Spring Boot + PostgreSQL + Next.js.
 
 — Paula
 
-
 ---
 
 ### Continuar a leitura
 
-<table width="100%">
-<tr>
-<td width="50%" valign="top" align="left">
-<sub><strong>← ANTERIOR</strong></sub><br/>
-<a href="../01-archaeologist/"><strong>@archaeologist</strong></a><br/>
-<sub>Mundo anterior.</sub>
-</td>
-<td width="50%" valign="top" align="right">
-<sub><strong>PRÓXIMO →</strong></sub><br/>
-<a href="../03-builder/"><strong>@builder</strong></a><br/>
-<sub>Próximo mundo: implementação.</sub>
-</td>
-</tr>
-</table>
+| ← ANTERIOR | PRÓXIMO → |
+| --- | --- |
+| [**@archaeologist**](../01-archaeologist/) — Mundo anterior. | [**@builder**](../03-builder/) — Próximo mundo: implementação. |
 
-<sub>↑ <a href="../../README.md">Voltar ao Kit PT-BR</a></sub>
-
+↑ [Voltar ao Kit PT-BR](../../README.md)
