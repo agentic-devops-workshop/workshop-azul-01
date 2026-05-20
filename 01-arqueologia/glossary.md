@@ -41,36 +41,36 @@ Prompt útil no Copilot Chat (cole o conteúdo de 2–3 arquivos `.NSN` no chat 
 
 | #   | Termo | Expansão | Programa | Contexto |
 | --- | ----- | -------- | -------- | -------- |
-| 1   |       |          |          |          |
-| 2   |       |          |          |          |
-| 3   |       |          |          |          |
-| 4   |       |          |          |          |
-| 5   |       |          |          |          |
-| 6   |       |          |          |          |
-| 7   |       |          |          |          |
-| 8   |       |          |          |          |
-| 9   |       |          |          |          |
-| 10  |       |          |          |          |
-| 11  |       |          |          |          |
-| 12  |       |          |          |          |
-| 13  |       |          |          |          |
-| 14  |       |          |          |          |
-| 15  |       |          |          |          |
-| 16  |       |          |          |          |
-| 17  |       |          |          |          |
-| 18  |       |          |          |          |
-| 19  |       |          |          |          |
-| 20  |       |          |          |          |
-| 21  |       |          |          |          |
-| 22  |       |          |          |          |
-| 23  |       |          |          |          |
-| 24  |       |          |          |          |
-| 25  |       |          |          |          |
-| 26  |       |          |          |          |
-| 27  |       |          |          |          |
-| 28  |       |          |          |          |
-| 29  |       |          |          |          |
-| 30  |       |          |          |          |
+| 1   | SIFAP | Sistema de Fiscalização e Administração de Pagamentos | `legado-sifap/README.md` | Nome do sistema legado responsável por cadastro, cálculo, pagamento e fiscalização. |
+| 2   | CPF | Cadastro de Pessoas Físicas | `BENEFICIARIO.ddm`, `PAGAMENTO.ddm`, `AUDITORIA.ddm` | Identificador principal do cidadão em cadastro, pagamento e trilha de auditoria. |
+| 3   | NUM-INSCRICAO | Número de inscrição/matrícula do beneficiário | `BENEFICIARIO.ddm`, `PAGAMENTO.ddm` | Chave alternativa usada para vínculo interno do beneficiário. |
+| 4   | SIT-BENEFICIARIO | Situação do beneficiário | `BENEFICIARIO.ddm` | Status operacional do beneficiário (A, S, C, I, D). |
+| 5   | MOT-SITUACAO | Motivo da situação | `BENEFICIARIO.ddm` | Código que justifica alterações de situação cadastral. |
+| 6   | VLR-RENDA-FAMILIAR | Valor da renda familiar | `BENEFICIARIO.ddm` | Valor declarado para apuração de elegibilidade. |
+| 7   | IND-RENDA-PERCAP | Indicador de renda per capita | `BENEFICIARIO.ddm` | Campo de renda per capita calculada a partir da composição familiar. |
+| 8   | QTD-MEMBROS-FAMILIA | Quantidade de membros da família | `BENEFICIARIO.ddm` | Base para cálculo de renda per capita e validações de programa. |
+| 9   | COD-PROGRAMA | Código do programa social | `BENEFICIARIO.ddm`, `PAGAMENTO.ddm`, `PROGRAMA-SOCIAL.ddm` | Chave de relacionamento entre cadastro, regras e pagamentos. |
+| 10  | DT-INICIO-BENEF | Data de início do benefício | `BENEFICIARIO.ddm` | Marco inicial de vigência do benefício. |
+| 11  | DT-FIM-BENEF | Data de fim do benefício | `BENEFICIARIO.ddm` | Fim de vigência; valor zero representa benefício sem prazo definido. |
+| 12  | IND-BIOMETRIA | Indicador de biometria | `BENEFICIARIO.ddm`, `PROGRAMA-SOCIAL.ddm` | Sinaliza exigência/coleta biométrica para concessão e manutenção. |
+| 13  | HASH-DIGITAL | Hash da digital biométrica | `BENEFICIARIO.ddm` | Referência técnica de integridade para dado biométrico. |
+| 14  | ANO-MES-REF | Ano/mês de referência (competência) | `PAGAMENTO.ddm` | Competência financeira do pagamento no formato AAAAMM. |
+| 15  | NUM-CICLO | Número do ciclo de processamento | `PAGAMENTO.ddm` | Identifica a rodada batch em que o pagamento foi gerado. |
+| 16  | VLR-BRUTO | Valor bruto | `PAGAMENTO.ddm` | Valor calculado antes da aplicação de descontos. |
+| 17  | VLR-LIQUIDO | Valor líquido | `PAGAMENTO.ddm` | Valor final após descontos e deduções. |
+| 18  | VLR-DESCONTO-TOTAL | Valor total de descontos | `PAGAMENTO.ddm` | Soma dos descontos aplicados no pagamento. |
+| 19  | TIPO-DESCONTO | Tipo de desconto | `PAGAMENTO.ddm` | Classificação de desconto (IR, JD, CS, PA, EM, TX, OU, EX). |
+| 20  | NUM-PROCESSO | Número de processo | `PAGAMENTO.ddm` | Referência processual, principalmente em desconto judicial. |
+| 21  | SIT-PAGAMENTO | Situação do pagamento | `PAGAMENTO.ddm` | Status do pagamento no ciclo (pendente, gerado, emitido, confirmado etc.). |
+| 22  | COD-RETORNO-BANCO | Código de retorno bancário | `PAGAMENTO.ddm` | Código de ocorrência de retorno usado na conciliação. |
+| 23  | CNAB 240 | Padrão de arquivo bancário CNAB 240 | `PAGAMENTO.ddm`, `legado-sifap/README.md` | Layout de remessa/retorno com instituições financeiras. |
+| 24  | SIAFI | Sistema Integrado de Administração Financeira | `PAGAMENTO.ddm`, `legado-sifap/README.md` | Sistema externo para integração financeira governamental. |
+| 25  | OB | Ordem Bancária | `PAGAMENTO.ddm` | Documento financeiro de pagamento integrado ao SIAFI. |
+| 26  | NE | Nota de Empenho | `PAGAMENTO.ddm` | Referência orçamentária associada ao pagamento. |
+| 27  | RENDA-MAX-PERCAP | Renda máxima per capita | `PROGRAMA-SOCIAL.ddm` | Limite de renda para elegibilidade em cada programa social. |
+| 28  | FATOR-K | Fator de correção especial | `PROGRAMA-SOCIAL.ddm` | Parâmetro de cálculo legado com documentação incompleta. |
+| 29  | TIPO-DSCT-APLIC | Tipos de desconto aplicáveis | `PROGRAMA-SOCIAL.ddm` | Lista de descontos permitidos por programa social. |
+| 30  | COD-ACAO | Código de ação de auditoria | `AUDITORIA.ddm` | Tipo de evento auditado (inclusão, alteração, login, batch, erro etc.). |
 
 > Adicione mais linhas conforme necessário. Não se limite a 30!
 
