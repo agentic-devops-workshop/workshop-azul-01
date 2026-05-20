@@ -41,36 +41,41 @@ Prompt útil no Copilot Chat (cole o conteúdo de 2–3 arquivos `.NSN` no chat 
 
 | #   | Termo | Expansão | Programa | Contexto |
 | --- | ----- | -------- | -------- | -------- |
-| 1   |       |          |          |          |
-| 2   |       |          |          |          |
-| 3   |       |          |          |          |
-| 4   |       |          |          |          |
-| 5   |       |          |          |          |
-| 6   |       |          |          |          |
-| 7   |       |          |          |          |
-| 8   |       |          |          |          |
-| 9   |       |          |          |          |
-| 10  |       |          |          |          |
-| 11  |       |          |          |          |
-| 12  |       |          |          |          |
-| 13  |       |          |          |          |
-| 14  |       |          |          |          |
-| 15  |       |          |          |          |
-| 16  |       |          |          |          |
-| 17  |       |          |          |          |
-| 18  |       |          |          |          |
-| 19  |       |          |          |          |
-| 20  |       |          |          |          |
-| 21  |       |          |          |          |
-| 22  |       |          |          |          |
-| 23  |       |          |          |          |
-| 24  |       |          |          |          |
-| 25  |       |          |          |          |
-| 26  |       |          |          |          |
-| 27  |       |          |          |          |
-| 28  |       |          |          |          |
-| 29  |       |          |          |          |
-| 30  |       |          |          |          |
+| 1   | `SIFAP` | Sistema de Fiscalização e Administração de Pagamentos | Todos | Nome do sistema legado completo |
+| 2   | `BENEF` | Beneficiário | `CONSBENF.NSN`, `RELPGT.NSN` | Pessoa física que recebe pagamento de programa social |
+| 3   | `CONSBENF` | Consulta Beneficiário | `CONSBENF.NSN` | Programa online de consulta cadastral via terminal 3270 |
+| 4   | `RELPGT` | Relatório de Pagamentos | `RELPGT.NSN` | Relatório analítico de pagamentos por período com totalizadores |
+| 5   | `RELAUDIT` | Relatório de Auditoria | `RELAUDIT.NSN` | Relatório da trilha de auditoria do sistema |
+| 6   | `CPF` | Cadastro de Pessoa Física | `CONSBENF.NSN`, `RELPGT.NSN` | Identificador único do beneficiário (N11) |
+| 7   | `NIS` | Número de Identificação Social | `CONSBENF.NSN` | Identificador alternativo de beneficiário, usado em busca |
+| 8   | `VLR-BRUTO` | Valor Bruto | `RELPGT.NSN`, `CONSBENF.NSN` | Valor total do pagamento antes de descontos (N9.2) |
+| 9   | `VLR-DESCONTO` | Valor Desconto | `RELPGT.NSN` | Valor total de deduções aplicadas ao pagamento |
+| 10  | `VLR-LIQUIDO` | Valor Líquido | `RELPGT.NSN`, `CONSBENF.NSN` | Valor efetivamente pago ao beneficiário (bruto − desconto) |
+| 11  | `VLR-ABONO` | Valor Abono | `RELPGT.NSN` | Valor de abono adicional ao pagamento, totalizado à parte |
+| 12  | `COMPETENCIA` | Competência (mês/ano) | `RELPGT.NSN`, `CONSBENF.NSN` | Período de referência do pagamento no formato AAAAMM (N6) |
+| 13  | `STATUS-PGTO` | Status do Pagamento | `RELPGT.NSN`, `CONSBENF.NSN` | Estado do pagamento: G=Gerado, P=Pago, C=Cancelado, D=Devolvido, E=Estornado |
+| 14  | `TIPO-PGTO` | Tipo de Pagamento | `RELPGT.NSN`, `CONSBENF.NSN` | Natureza do pagamento: N=Normal, D=Décimo, T=Terceiro |
+| 15  | `STATUS` | Status do Beneficiário | `CONSBENF.NSN` | Estado cadastral: A=Ativo, S=Suspenso, C=Cancelado, I=Inativo, D=Desligado |
+| 16  | `COD-PROGRAMA` | Código do Programa Social | `CONSBENF.NSN`, `RELPGT.NSN` | Identificador numérico do programa social (N4) |
+| 17  | `COD-REGIAO` | Código da Região | `CONSBENF.NSN` | Identificador numérico da região geográfica do beneficiário (N2) |
+| 18  | `RENDA-FAMILIAR` | Renda Familiar | `CONSBENF.NSN` | Renda familiar declarada do beneficiário (N9.2) |
+| 19  | `NUM-DEPENDENTES` | Número de Dependentes | `CONSBENF.NSN` | Quantidade de dependentes do beneficiário (N2) |
+| 20  | `DT-GERACAO` | Data de Geração | `RELPGT.NSN` | Data em que o pagamento foi gerado no sistema (N8) |
+| 21  | `DT-CADASTRO` | Data de Cadastro | `CONSBENF.NSN` | Data de inclusão do beneficiário no sistema |
+| 22  | `SEQ-AUDIT` | Sequência de Auditoria | `RELAUDIT.NSN` | Número sequencial único do evento de auditoria (N10) |
+| 23  | `ACAO` | Ação de Auditoria | `RELAUDIT.NSN` | Código da ação: IN=Inclusão, AL=Alteração, CO=Conciliação, CN=Consulta, DV=Divergência, EX=Exclusão |
+| 24  | `TABELA-REF` | Tabela de Referência | `RELAUDIT.NSN` | Nome da entidade/tabela afetada pelo evento de auditoria |
+| 25  | `CHAVE-REF` | Chave de Referência | `RELAUDIT.NSN` | Chave primária do registro afetado pelo evento de auditoria |
+| 26  | `VLR-ANTERIOR` | Valor Anterior | `RELAUDIT.NSN` | Valor do campo antes da alteração (trilha de auditoria) |
+| 27  | `VLR-NOVO` | Valor Novo | `RELAUDIT.NSN` | Valor do campo após a alteração (trilha de auditoria) |
+| 28  | `MAP` | Mapa de Tela | `CONSBENF.NSN` | Layout de tela do terminal 3270 para apresentação de dados |
+| 29  | `UF` | Unidade da Federação | `CONSBENF.NSN`, `RELPGT.NSN` | Sigla do estado brasileiro do beneficiário (A2) |
+| 30  | `PROG-ANT` | Programa Anterior | `RELPGT.NSN` | Variável de controle para quebra de subtotal por programa social |
+| 31  | `EX` | Exclusão | `RELAUDIT.NSN` | Código de ação de exclusão na auditoria — filtrado e nunca exibido no relatório |
+| 32  | `DV` | Divergência | `RELAUDIT.NSN` | Código de ação para eventos de divergência encontrada em conciliação |
+| 33  | `NUM-PAGTO` | Número do Pagamento | `CONSBENF.NSN`, `RELPGT.NSN` | Identificador sequencial único do registro de pagamento (N10) |
+| 34  | `HR-EVENTO` | Hora do Evento | `RELAUDIT.NSN` | Hora do evento de auditoria no formato HHMMSS (N6) |
+| 35  | `TIPO-SAIDA` | Tipo de Saída | `RELAUDIT.NSN` | Destino do relatório: T=Tela, I=Impressora |
 
 > Adicione mais linhas conforme necessário. Não se limite a 30!
 

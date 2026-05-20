@@ -46,21 +46,21 @@ O que NÃO conta: paginação de relatório, formatação de saída, manipulaç�
 
 | ID     | Regra de Negócio | Programa Fonte | Campos DDM | Nível de Risco | Notas |
 | ------ | ---------------- | -------------- | ---------- | -------------- | ----- |
-| BR-001 |                  |                |            |                |       |
-| BR-002 |                  |                |            |                |       |
-| BR-003 |                  |                |            |                |       |
-| BR-004 |                  |                |            |                |       |
-| BR-005 |                  |                |            |                |       |
-| BR-006 |                  |                |            |                |       |
-| BR-007 |                  |                |            |                |       |
-| BR-008 |                  |                |            |                |       |
-| BR-009 |                  |                |            |                |       |
-| BR-010 |                  |                |            |                |       |
-| BR-011 |                  |                |            |                |       |
-| BR-012 |                  |                |            |                |       |
-| BR-013 |                  |                |            |                |       |
-| BR-014 |                  |                |            |                |       |
-| BR-015 |                  |                |            |                |       |
+| BR-001 | Busca de beneficiário pode ser feita por CPF ou NIS; se tipo de busca não informado, assume CPF como padrão | `01-arqueologia/legado-sifap/natural-programs/CONSBENF.NSN#L74-L90` | `BENEFICIARIO.CPF`, `BENEFICIARIO.NIS` | MÉDIO | Default silencioso para CPF quando campo vazio |
+| BR-002 | Status do beneficiário possui 5 estados válidos: A(Ativo), S(Suspenso), C(Cancelado), I(Inativo), D(Desligado) | `01-arqueologia/legado-sifap/natural-programs/CONSBENF.NSN#L97-L110` | `BENEFICIARIO.STATUS` | ALTO | Qualquer valor fora desses é marcado "DESCONHECIDO" |
+| BR-003 | CPF do beneficiário deve ser mascarado na exibição no formato `***.***XXX-XX` para proteger dados sensíveis | `01-arqueologia/legado-sifap/natural-programs/CONSBENF.NSN#L152-L166` | `BENEFICIARIO.CPF` | CRÍTICO | Regra de segurança/LGPD — mascaramento obrigatório |
+| BR-004 | CPF com menos de 11 dígitos (preenchido com zeros à esquerda) usa lógica de máscara diferente — expõe os primeiros 3 dígitos em vez de ocultar | `01-arqueologia/legado-sifap/natural-programs/CONSBENF.NSN#L155-L158` | `BENEFICIARIO.CPF` | CRÍTICO | Inconsistência conhecida documentada no código; não corrigir sem aprovação da auditoria |
+| BR-005 | Histórico de pagamentos na consulta é limitado aos últimos 12 registros por beneficiário | `01-arqueologia/legado-sifap/natural-programs/CONSBENF.NSN#L131-L141` | `PAGAMENTO.CPF-BENEF`, `PAGAMENTO.COMPETENCIA` | MÉDIO | Limite fixo de 12 — sem paginação |
+| BR-006 | Relatório de pagamentos permite filtro por período de competência (início/fim) e código de programa social (0=todos) | `01-arqueologia/legado-sifap/natural-programs/RELPGT.NSN#L70-L82` | `PAGAMENTO.COMPETENCIA`, `PAGAMENTO.COD-PROGRAMA` | ALTO | Código 0 é convenção para "sem filtro" |
+| BR-007 | Relatório de pagamentos exige quebra (subtotal) por programa social, com acumuladores de bruto, líquido e quantidade | `01-arqueologia/legado-sifap/natural-programs/RELPGT.NSN#L85-L93` | `PAGAMENTO.COD-PROGRAMA` | ALTO | Subtotais parciais + total geral no fim |
+| BR-008 | Tipo de pagamento: N=Normal, D=Décimo (13º), T=Terceiro; qualquer outro valor é classificado como "OUTRO" | `01-arqueologia/legado-sifap/natural-programs/RELPGT.NSN#L105-L114` | `PAGAMENTO.TIPO-PGTO` | MÉDIO | Enum implícito sem validação na entrada |
+| BR-009 | Status de pagamento possui 5 estados: G=Gerado, P=Pago, C=Cancelado, D=Devolvido, E=Estornado | `01-arqueologia/legado-sifap/natural-programs/RELPGT.NSN#L117-L131` | `PAGAMENTO.STATUS-PGTO` | ALTO | Fluxo de ciclo de vida do pagamento |
+| BR-010 | Relatório de pagamentos totaliza separadamente o valor de abono (`VLR-ABONO`), que não entra no cálculo de bruto/desconto/líquido | `01-arqueologia/legado-sifap/natural-programs/RELPGT.NSN#L149-L157` | `PAGAMENTO.VLR-ABONO` | ALTO | Abono é verba à parte, totalizada mas não somada ao bruto |
+| BR-011 | Eventos de exclusão (ação='EX') são filtrados silenciosamente do relatório de auditoria e nunca são exibidos ao usuário | `01-arqueologia/legado-sifap/natural-programs/RELAUDIT.NSN#L93-L97` | `AUDITORIA.ACAO` | CRÍTICO | Supressão intencional — pode mascarar fraude ou exclusão indevida |
+| BR-012 | Relatório de auditoria aceita filtros combinados por período, ação, usuário e tabela; data inicial padrão é 01/01/1997 quando não informada | `01-arqueologia/legado-sifap/natural-programs/RELAUDIT.NSN#L78-L88` | `AUDITORIA.DT-EVENTO` | MÉDIO | Data hardcoded 19970101 = data de implantação do sistema |
+| BR-013 | Auditoria contabiliza eventos por tipo de ação (inclusão, alteração, consulta, conciliação, divergência) com resumo quantitativo no final | `01-arqueologia/legado-sifap/natural-programs/RELAUDIT.NSN#L105-L122` | `AUDITORIA.ACAO` | MÉDIO | 6 tipos de ação: IN, AL, CO, CN, DV + "OUTRA" |
+| BR-014 | Relatório de auditoria suporta saída dual: T=Tela (WRITE) com menos colunas, I=Impressora (PRINT) com descrição completa | `01-arqueologia/legado-sifap/natural-programs/RELAUDIT.NSN#L131-L145` | — | BAIXO | Na saída tela, campo DESCRICAO é omitido |
+| BR-015 | Paginação de relatórios usa padrão mainframe de 66 linhas por página com form feed (`/`) | `01-arqueologia/legado-sifap/natural-programs/RELPGT.NSN#L63-L64` | — | BAIXO | Padrão de impressora matricial — substituir por paginação web |
 
 > Adicione mais linhas conforme necessário. Lembre-se: existem **10 regras escondidas** no código!
 
