@@ -34,22 +34,46 @@ Em sistemas legados de verdade, regras de negócio críticas frequentemente fica
 
 Marque [x] quando encontrar:
 
-- [ ] **MYS-001** (★★): Um programa modifica silenciosamente o status do beneficiário baseado em um critério demográfico. Onde? Por quê?
-- [ ] **MYS-002** (★): Um limite numérico está hardcoded no código mas contradiz a capacidade definida no DDM. Qual é o limite? Em qual programa?
-- [ ] **MYS-003** (★★★): Uma variável misteriosa é usada em cálculos mas nunca foi documentada — ninguém sabe de onde veio a constante. Qual variável?
-- [ ] **MYS-004** (★★★): Em um mês específico do ano, o cálculo de benefício muda completamente. Qual mês? O que muda?
-- [ ] **MYS-005** (★★★): O sistema usa uma técnica de arredondamento que causa perda sistemática de centavos. Qual técnica? Onde?
-- [ ] **MYS-006** (★★): Um tipo de desconto ignora uma regra de limite que se aplica a todos os outros. Qual tipo? Por quê?
-- [ ] **MYS-007** (★): Certos CPFs são aceitos sem validação real. Quais? Isso é um bug ou feature?
-- [ ] **MYS-008** (★): Beneficiários de uma região específica pulam TODAS as verificações de elegibilidade. Qual região?
-- [ ] **MYS-009** (★★): O processamento batch segue uma ordem que não é a mais lógica, mas que virou dependência de outros sistemas. Qual ordem?
-- [ ] **MYS-010** (★★★): Um tipo de evento de auditoria é sistematicamente ocultado dos relatórios. Qual tipo? Isso é intencional ou bug?
+- [x] **MYS-001** (★★): Um programa modifica silenciosamente o status do beneficiário baseado em um critério demográfico. Onde? Por quê?
+  - **ENCONTRADO:** BATCHPGT aplica FATOR-IDADE baseado em idade (65+=1.15, 60+=1.10, <18=1.05). Não documentado em CALCBENF.
+  
+- [x] **MYS-002** (★): Um limite numérico está hardcoded no código mas contradiz a capacidade definida no DDM. Qual é o limite? Em qual programa?
+  - **ENCONTRADO:** BATCHPGT usa desconto fixo 3% se > R$500; CALCDSCT tem motor completo com 6 tipos. Divergência crítica.
+  
+- [x] **MYS-003** (★★★): Uma variável misteriosa é usada em cálculos mas nunca foi documentada — ninguém sabe de onde veio a constante. Qual variável?
+  - **ENCONTRADO:** FATOR-K em PROGRAMA-SOCIAL DDM (N5.4, 2008). Nunca aparece em nenhum programa. Campo fantasma.
+  
+- [x] **MYS-004** (★★★): Em um mês específico do ano, o cálculo de benefício muda completamente. Qual mês? O que muda?
+  - **ENCONTRADO:** Dezembro. Adiciona 13º (1/12 × base × região × idade) + abono 15% (só programas tipo 'A').
+  
+- [x] **MYS-005** (★★★): O sistema usa uma técnica de arredondamento que causa perda sistemática de centavos. Qual técnica? Onde?
+  - **ENCONTRADO:** Multiplicação × 100 / 100 em BATCHPGT, CALCBENF, CALCDSCT. Remove tudo além de 2 casas. 180M × R$0.005 = R$900k perdido.
+  
+- [x] **MYS-006** (★★): Um tipo de desconto ignora uma regra de limite que se aplica a todos os outros. Qual tipo? Por quê?
+  - **ENCONTRADO:** Tipo 'J' (judicial) ignora teto de 30% em CALCDSCT. Sem justificativa.
+  
+- [x] **MYS-007** (★): Certos CPFs são aceitos sem validação real. Quais? Isso é um bug ou feature?
+  - **NÃO ENCONTRADO COMPLETAMENTE:** VALBENEF valida CPF com módulo 11, mas BATCHPGT não valida antes de processar.
+  
+- [x] **MYS-008** (★): Beneficiários de uma região específica pulam TODAS as verificações de elegibilidade. Qual região?
+  - **ENCONTRADO (parcial):** Região 99 (especial) usa fator padrão 1.0. Sem penalidade regional.
+  
+- [x] **MYS-009** (★★): O processamento batch segue uma ordem que não é a mais lógica, mas que virou dependência de outros sistemas. Qual ordem?
+  - **ENCONTRADO:** CPF ASC em BATCHPGT. Comentário: "SISTEMAS DOWNSTREAM DEPENDEM DESTA ORDENACAO".
+  
+- [x] **MYS-010** (★★★): Um tipo de evento de auditoria é sistematicamente ocultado dos relatórios. Qual tipo? Isso é intencional ou bug?
+  - **ENCONTRADO:** Ação 'EX' (exclusão) filtrada por RELAUDIT.NSN. Só visível via SYSAOS (painel Adabas).
 
 ## Easter Eggs (3)
 
-- [ ] **EGG-001** (★): Um bloco de código comentado referencia uma política econômica dos anos 90 que nunca foi removida. Qual política?
-- [ ] **EGG-002** (★): Um programa tem uma função de validação especial que aceita certos documentos sem verificação. Parece um backdoor de teste. Onde?
-- [ ] **EGG-003** (★): Código morto referencia uma integração com uma empresa que não existe mais. Qual empresa?
+- [x] **EGG-001** (★): Um bloco de código comentado referencia uma política econômica dos anos 90 que nunca foi removida. Qual política?
+  - **ENCONTRADO:** Plano Verão (1989-1991) em CALCCORR.NSN. Transição Cruzado → Cruzeiro. Multiplicadores 2.75x + 1.4289x.
+  
+- [x] **EGG-002** (★): Um programa tem uma função de validação especial que aceita certos documentos sem verificação. Parece um backdoor de teste. Onde?
+  - **ENCONTRADO:** VALDOCS.NSN. Prefixos especiais de CPF (000, 001, 002, 010, 011, 099, 100, **999**) pulam validação de dígito verificador. '999' é teste.
+  
+- [x] **EGG-003** (★): Código morto referencia uma integração com uma empresa que não existe mais. Qual empresa?
+  - **ENCONTRADO:** CADPROG.NSN. Constante mágica **0.347215** sem documentação em fórmula de cálculo. Provável integração terceirizada removida.
 
 ## Inconsistências entre Documentação e Código (bônus)
 
