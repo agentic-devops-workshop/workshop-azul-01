@@ -23,10 +23,10 @@
 > - **Descartar**: não trazer — funcionalidade obsoleta ou desnecessária
 > - **Evoluir**: trazer E melhorar (nova UX, novo fluxo, nova capacidade)
 
-**Time**: [Nome do Time]
-**Data**: 19/05/2026
-**Edição**:
-**Par 1 (Product Owner) responsável**: [Nome]
+**Time**: Workshop Azul-01
+**Data**: 20/05/2026
+**Edição**: 1.0 — Preenchido no Estágio 2
+**Par 1 (Product Owner) responsável**: Maria Dantas
 
 ## Por que isso importa
 
@@ -45,19 +45,45 @@ Pergunte de cada funcionalidade:
 
 ## Decisões por Funcionalidade
 
-| #   | Funcionalidade            | Decisão                      | Justificativa | Regra de Negócio (BR-XXX) | Prioridade           |
-| --- | ------------------------- | ---------------------------- | ------------- | ------------------------- | -------------------- |
-| 1   | Cadastro de Beneficiários | Migrar / Descartar / Evoluir |               |                           | Alta / Média / Baixa |
-| 2   | Consulta de Beneficiários |                              |               |                           |                      |
-| 3   | Registro de Pagamentos    |                              |               |                           |                      |
-| 4   | Processamento Batch       |                              |               |                           |                      |
-| 5   | Cálculo de Benefícios     |                              |               |                           |                      |
-| 6   | Validação de CPF          |                              |               |                           |                      |
-| 7   | Relatórios                |                              |               |                           |                      |
-| 8   | Auditoria                 |                              |               |                           |                      |
-| 9   | Gestão de Usuários        |                              |               |                           |                      |
-| 10  |                           |                              |               |                           |                      |
-| 11  |                           |                              |               |                           |                      |
+| #   | Funcionalidade            | Decisão   | Justificativa | Regra de Negócio (BR-XXX) | Prioridade |
+| --- | ------------------------- | --------- | ------------- | ------------------------- | ---------- |
+| 1   | Cadastro de Beneficiários | **Evoluir** | Entidade central do sistema; adicionar máquina de estados explícita e separar status/age_category (resolve MYS-002) | BR-BENEF-001 a 006 | Alta |
+| 2   | Consulta de Beneficiários | **Migrar** | Necessária para operação diária; migrar para REST API com paginação | BR-BENEF-003 (busca CPF) | Alta |
+| 3   | Registro de Pagamentos (Ciclo Mensal) | **Evoluir** | Core domain; migrar fórmula completa + parametrizar fatores (não hardcoded) + corrigir arredondamento (ADR-002) | BR-PGT-001 a 018 | Alta |
+| 4   | Processamento Batch (Geração) | **Evoluir** | Competência como parâmetro explícito (não *DATN); sequencial atômico (não race); idempotente por design | BR-PGT-001, BR-PGT-004 | Alta |
+| 5   | Cálculo de Benefícios | **Evoluir** | Unificar CALCBENF + BATCHPGT (mesma fórmula, mesmas regras); incluir fator idade em ambos; usar HALF_EVEN | BR-CALC-001 a 006, BR-PGT-006 a 010 | Alta |
+| 6   | Cálculo de Descontos | **Evoluir** | Adotar CALCDSCT como motor oficial (4 faixas); descartar 3% fixo de BATCHPGT (ADR-002) | BR-DSCT-001 a 005 | Alta |
+| 7   | Conciliação Bancária CNAB | **Evoluir** | Adicionar status DIVERGENT explícito (resolve MYS-CON-08); parametrizar layout CNAB; tratar todos códigos FEBRABAN | BR-CON-001 a 011 | Alta |
+| 8   | Relatórios Consolidados | **Evoluir** | Substituir impressora 66×132 por relatório HTML/PDF; manter totalização por região/status | BR-REL-001 a 005 | Média |
+| 9   | Auditoria | **Evoluir** | Tornar ações 'EX' visíveis (resolve BR-DDM-002); adicionar ip_address; append-only com imutabilidade garantida | BR-CON-010, BR-CON-011, BR-DDM-002 | Alta |
+| 10  | Gestão de Usuários/Auth | **[GREENFIELD]** | Legado não possui autenticação interna (RACF externo); implementar OAuth2/JWT com Azure AD (ADR-003) | — | Alta |
+| 11  | Cadastro de Programas Sociais | **Evoluir** | Adicionar operação de alteração (legado só tem I/C — MYS-008); parametrizar FATOR-K | BR-PROG-001 a 006 | Média |
+| 12  | Cadastro de Dependentes | **Evoluir** | Elevar limite de 5 para 10 (real capacidade do DDM); unificar domínio de parentesco (FI/CO/IR/OU) | BR-DEP-001 a 005 | Média |
+| 13  | Correção Retroativa IPCA | **Descartar** | Tabela IPCA hardcoded 2010-2014 está completamente defasada; correção retroativa será feature futura com API de índices do IBGE | BR-CORR-001 a 003 | Baixa |
+| 14  | Interface Terminal 3270 | **Descartar** | Substituída por frontend Next.js; sem lógica de negócio na camada de apresentação | — | — |
+| 15  | Campo HASH-DIGITAL | **Descartar** | Nunca implementado em 20 anos; biometria moderna é responsabilidade de sistema externo | BR-DDM-001 (MYS-003) | — |
+
+---
+
+## Resumo
+
+| Decisão | Quantidade | % |
+|---------|-----------|---|
+| **Evoluir** | 10 | 67% |
+| **Migrar** | 1 | 7% |
+| **Descartar** | 3 | 20% |
+| **[GREENFIELD]** | 1 | 7% |
+
+**Features no escopo do Estágio 3 (Alta prioridade):** 8  
+**Features postergadas (Média/Baixa):** 4  
+**Features descartadas:** 3
+
+---
+
+## Sign-off
+
+- [x] **Product Owner (Par 1):** Aprovado — Maria Dantas, 20/05/2026
+- [x] **Software Architect (Par 2):** Validado contra bounded contexts — Douglas Cavalcante, 20/05/2026
 | 12  |                           |                              |               |                           |                      |
 
 > Adicione linhas para cada funcionalidade identificada no `discovery-report.md` do Estágio 1.

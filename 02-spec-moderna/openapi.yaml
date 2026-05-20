@@ -1,0 +1,741 @@
+openapi: 3.0.3
+info:
+  title: SIFAP 2.0 — API de Pagamentos de Programas Sociais
+  description: |
+    API REST do sistema moderno SIFAP 2.0, organizada por bounded contexts.
+    Autenticação via OAuth2/JWT (Azure AD). Todos os endpoints requerem Bearer token.
+  version: 1.0.0
+  contact:
+    name: Par 2 — Arquitetura
+    
+servers:
+  - url: http://localhost:8080/api/v1
+    description: Development
+  - url: https://sifap.azurewebsites.net/api/v1
+    description: Production
+
+security:
+  - bearerAuth: []
+
+tags:
+  - name: Beneficiary
+    description: Cadastro e consulta de beneficiários e dependentes
+  - name: Social Program
+    description: Configuração de programas sociais e parâmetros
+  - name: Payment
+    description: Geração e consulta de ciclos de pagamento
+  - name: Reconciliation
+    description: Processamento de retorno CNAB 240 e conciliação
+  - name: Audit
+    description: Consulta de trilha de auditoria
+
+paths:
+  /beneficiaries:
+    post:
+      tags: [Beneficiary]
+      summary: Cadastrar novo beneficiário
+      description: "REQ-001, REQ-002, REQ-003, REQ-004"
+      operationId: registerBeneficiary
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/RegisterBeneficiaryRequest'
+      responses:
+        '201':
+          description: Beneficiário criado
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/BeneficiaryResponse'
+        '409':
+          description: CPF já cadastrado
+        '422':
+          description: Dados inválidos (CPF, campos obrigatórios)
+    get:
+      tags: [Beneficiary]
+      summary: Buscar beneficiário por CPF
+      operationId: findBeneficiaryByCpf
+      parameters:
+        - name: cpf
+          in: query
+          required: true
+          schema:
+            type: string
+            pattern: '^\d{11}$'
+      responses:
+        '200':
+          description: Beneficiário encontrado
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/BeneficiaryResponse'
+        '404':
+          description: Não encontrado
+
+  /beneficiaries/{id}:
+    get:
+      tags: [Beneficiary]
+      summary: Consultar beneficiário por ID
+      operationId: getBeneficiary
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: integer
+            format: int64
+      responses:
+        '200':
+          description: Beneficiário encontrado
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/BeneficiaryResponse'
+        '404':
+          description: Não encontrado
+
+  /beneficiaries/{id}/status:
+    patch:
+      tags: [Beneficiary]
+      summary: Alterar status do beneficiário
+      description: "REQ-005"
+      operationId: changeStatus
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: integer
+            format: int64
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/ChangeStatusRequest'
+      responses:
+        '204':
+          description: Status alterado
+        '422':
+          description: Transição de status inválida
+
+  /beneficiaries/{id}/dependents:
+    post:
+      tags: [Beneficiary]
+      summary: Adicionar dependente ao titular
+      description: "REQ-005, REQ-006"
+      operationId: addDependent
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: integer
+            format: int64
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/AddDependentRequest'
+      responses:
+        '201':
+          description: Dependente adicionado
+        '422':
+          description: Titular inativo ou limite atingido
+    get:
+      tags: [Beneficiary]
+      summary: Listar dependentes do titular
+      operationId: listDependents
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: integer
+            format: int64
+      responses:
+        '200':
+          description: Lista de dependentes
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/DependentResponse'
+
+  /programs:
+    post:
+      tags: [Social Program]
+      summary: Criar programa social
+      description: "REQ-007, REQ-008, REQ-009"
+      operationId: createProgram
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/CreateProgramRequest'
+      responses:
+        '201':
+          description: Programa criado
+        '409':
+          description: Código já existe
+
+  /programs/{id}:
+    get:
+      tags: [Social Program]
+      summary: Consultar programa e parâmetros
+      operationId: getProgram
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: string
+            maxLength: 4
+      responses:
+        '200':
+          description: Programa encontrado
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ProgramResponse'
+        '404':
+          description: Não encontrado
+
+  /programs/{id}/parameters:
+    put:
+      tags: [Social Program]
+      summary: Atualizar parâmetros de cálculo
+      description: "REQ-009"
+      operationId: updateParameters
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: string
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/UpdateParametersRequest'
+      responses:
+        '204':
+          description: Parâmetros atualizados
+
+  /payment-cycles:
+    post:
+      tags: [Payment]
+      summary: Gerar ciclo mensal de pagamento
+      description: "REQ-010, REQ-011, REQ-012, REQ-013, REQ-014, REQ-015"
+      operationId: generateCycle
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/GenerateCycleRequest'
+      responses:
+        '201':
+          description: Ciclo gerado
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/CycleStatusResponse'
+        '409':
+          description: Ciclo já existe para esta competência
+
+  /payment-cycles/{id}:
+    get:
+      tags: [Payment]
+      summary: Consultar status do ciclo
+      operationId: getCycleStatus
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: integer
+            format: int64
+      responses:
+        '200':
+          description: Status do ciclo
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/CycleStatusResponse'
+
+  /payment-cycles/{id}/payments:
+    get:
+      tags: [Payment]
+      summary: Listar pagamentos do ciclo
+      operationId: listCyclePayments
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: integer
+            format: int64
+        - name: page
+          in: query
+          schema:
+            type: integer
+            default: 0
+        - name: size
+          in: query
+          schema:
+            type: integer
+            default: 20
+      responses:
+        '200':
+          description: Pagamentos do ciclo
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/PaymentPage'
+
+  /payments:
+    get:
+      tags: [Payment]
+      summary: Buscar pagamento por CPF e competência
+      description: "REQ-011"
+      operationId: findPayment
+      parameters:
+        - name: cpf
+          in: query
+          required: true
+          schema:
+            type: string
+        - name: competencia
+          in: query
+          required: true
+          schema:
+            type: string
+            pattern: '^\d{6}$'
+      responses:
+        '200':
+          description: Pagamento encontrado
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/PaymentResponse'
+        '404':
+          description: Não encontrado
+
+  /reconciliation/files:
+    post:
+      tags: [Reconciliation]
+      summary: Upload e processamento de arquivo retorno CNAB 240
+      description: "REQ-016, REQ-017, REQ-018, REQ-019"
+      operationId: processReturnFile
+      requestBody:
+        required: true
+        content:
+          multipart/form-data:
+            schema:
+              type: object
+              properties:
+                file:
+                  type: string
+                  format: binary
+      responses:
+        '202':
+          description: Arquivo aceito para processamento
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ReconciliationResultResponse'
+        '422':
+          description: Arquivo inválido
+
+  /reconciliation/files/{id}:
+    get:
+      tags: [Reconciliation]
+      summary: Status do processamento CNAB
+      operationId: getFileStatus
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: integer
+            format: int64
+      responses:
+        '200':
+          description: Status
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ReconciliationResultResponse'
+
+  /reconciliation/unreconciled:
+    get:
+      tags: [Reconciliation]
+      summary: Pagamentos não conciliados
+      description: "REQ-019"
+      operationId: getUnreconciled
+      parameters:
+        - name: cycleId
+          in: query
+          required: true
+          schema:
+            type: integer
+            format: int64
+      responses:
+        '200':
+          description: Lista de pagamentos não conciliados
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/UnreconciledPaymentResponse'
+
+  /audit:
+    get:
+      tags: [Audit]
+      summary: Consultar trilha de auditoria
+      description: "REQ-020"
+      operationId: queryAudit
+      parameters:
+        - name: start
+          in: query
+          required: true
+          schema:
+            type: string
+            format: date-time
+        - name: end
+          in: query
+          required: true
+          schema:
+            type: string
+            format: date-time
+        - name: action
+          in: query
+          schema:
+            type: string
+        - name: userId
+          in: query
+          schema:
+            type: string
+        - name: page
+          in: query
+          schema:
+            type: integer
+            default: 0
+        - name: size
+          in: query
+          schema:
+            type: integer
+            default: 50
+      responses:
+        '200':
+          description: Eventos de auditoria
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/AuditPage'
+
+components:
+  securitySchemes:
+    bearerAuth:
+      type: http
+      scheme: bearer
+      bearerFormat: JWT
+
+  schemas:
+    RegisterBeneficiaryRequest:
+      type: object
+      required: [cpf, name, birthDate, sex]
+      properties:
+        cpf:
+          type: string
+          pattern: '^\d{11}$'
+        name:
+          type: string
+          maxLength: 60
+        birthDate:
+          type: string
+          format: date
+        sex:
+          type: string
+          enum: [M, F]
+        codRegiao:
+          type: integer
+          minimum: 1
+          maximum: 27
+        rendaFamiliar:
+          type: number
+          format: decimal
+
+    BeneficiaryResponse:
+      type: object
+      properties:
+        id:
+          type: integer
+          format: int64
+        cpf:
+          type: string
+        name:
+          type: string
+        status:
+          type: string
+          enum: [ACTIVE, SUSPENDED, CANCELLED, DETACHED, INACTIVE]
+        ageCategory:
+          type: string
+          enum: [STANDARD, ELDERLY]
+        numDependents:
+          type: integer
+        codRegiao:
+          type: integer
+        rendaFamiliar:
+          type: number
+
+    ChangeStatusRequest:
+      type: object
+      required: [newStatus]
+      properties:
+        newStatus:
+          type: string
+          enum: [ACTIVE, SUSPENDED, CANCELLED, DETACHED, INACTIVE]
+
+    AddDependentRequest:
+      type: object
+      required: [name, parentesco]
+      properties:
+        name:
+          type: string
+        cpf:
+          type: string
+        parentesco:
+          type: string
+          enum: [FILHO, CONJUGE, IRMAO, OUTRO]
+        birthDate:
+          type: string
+          format: date
+        sex:
+          type: string
+          enum: [M, F]
+
+    DependentResponse:
+      type: object
+      properties:
+        id:
+          type: integer
+          format: int64
+        name:
+          type: string
+        cpf:
+          type: string
+        parentesco:
+          type: string
+        birthDate:
+          type: string
+          format: date
+        active:
+          type: boolean
+
+    CreateProgramRequest:
+      type: object
+      required: [id, name, tipo, vlrBase]
+      properties:
+        id:
+          type: string
+          maxLength: 4
+        name:
+          type: string
+        tipo:
+          type: string
+          enum: [ASSISTENCIAL, PREVIDENCIARIO, TRABALHO]
+        vlrBase:
+          type: number
+        fatorReajuste:
+          type: number
+
+    ProgramResponse:
+      type: object
+      properties:
+        id:
+          type: string
+        name:
+          type: string
+        tipo:
+          type: string
+        status:
+          type: string
+        vlrBase:
+          type: number
+        fatorK:
+          type: number
+        vlrBaseIndividual:
+          type: number
+
+    UpdateParametersRequest:
+      type: object
+      properties:
+        vlrBase:
+          type: number
+        fatorReajuste:
+          type: number
+        regionalFactors:
+          type: array
+          items:
+            type: object
+            properties:
+              codRegiao:
+                type: integer
+              factor:
+                type: number
+
+    GenerateCycleRequest:
+      type: object
+      required: [competencia, programId]
+      properties:
+        competencia:
+          type: string
+          pattern: '^\d{6}$'
+          description: "Formato AAAAMM"
+        programId:
+          type: string
+
+    CycleStatusResponse:
+      type: object
+      properties:
+        id:
+          type: integer
+          format: int64
+        competencia:
+          type: string
+        status:
+          type: string
+          enum: [DRAFT, GENERATED, PUBLISHED, CLOSED]
+        totalPayments:
+          type: integer
+        totalAmount:
+          type: number
+        generatedAt:
+          type: string
+          format: date-time
+
+    PaymentResponse:
+      type: object
+      properties:
+        id:
+          type: integer
+          format: int64
+        numPagto:
+          type: integer
+          format: int64
+        cpfBenef:
+          type: string
+        competencia:
+          type: string
+        status:
+          type: string
+          enum: [GENERATED, PAID, RETURNED, REVERSED, DIVERGENT]
+        tipo:
+          type: string
+          enum: [REGULAR, DECIMO_TERCEIRO, ABONO]
+        vlrBruto:
+          type: number
+        vlrDesconto:
+          type: number
+        vlrLiquido:
+          type: number
+        dtPagamento:
+          type: string
+          format: date
+
+    PaymentPage:
+      type: object
+      properties:
+        content:
+          type: array
+          items:
+            $ref: '#/components/schemas/PaymentResponse'
+        totalElements:
+          type: integer
+        totalPages:
+          type: integer
+        page:
+          type: integer
+
+    ReconciliationResultResponse:
+      type: object
+      properties:
+        id:
+          type: integer
+          format: int64
+        filename:
+          type: string
+        status:
+          type: string
+          enum: [PROCESSING, COMPLETED, ERROR]
+        totalRecords:
+          type: integer
+        matched:
+          type: integer
+        divergent:
+          type: integer
+        notFound:
+          type: integer
+        processedAt:
+          type: string
+          format: date-time
+
+    UnreconciledPaymentResponse:
+      type: object
+      properties:
+        paymentId:
+          type: integer
+          format: int64
+        cpf:
+          type: string
+        competencia:
+          type: string
+        vlrLiquido:
+          type: number
+        status:
+          type: string
+        reason:
+          type: string
+
+    AuditPage:
+      type: object
+      properties:
+        content:
+          type: array
+          items:
+            $ref: '#/components/schemas/AuditEventResponse'
+        totalElements:
+          type: integer
+        totalPages:
+          type: integer
+
+    AuditEventResponse:
+      type: object
+      properties:
+        id:
+          type: integer
+          format: int64
+        action:
+          type: string
+        userId:
+          type: string
+        entityType:
+          type: string
+        entityId:
+          type: string
+        timestamp:
+          type: string
+          format: date-time
+        oldState:
+          type: object
+        newState:
+          type: object
