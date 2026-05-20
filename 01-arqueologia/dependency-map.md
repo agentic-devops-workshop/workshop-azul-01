@@ -202,6 +202,8 @@ flowchart LR
  PROG_BATCH --> DDM_AUDIT
 ```
 
+> DDMs preenchidos com os nomes reais encontrados em [`../01-arqueologia/legado-sifap/adabas-ddms/`](../01-arqueologia/legado-sifap/adabas-ddms/).
+
 ## Tabela de Dependências
 
 | Programa | Chama (CALLNAT) | Lê (READ/FIND) DDMs | Escreve (STORE/UPDATE) DDMs | Sub-rotinas internas | Observações |
