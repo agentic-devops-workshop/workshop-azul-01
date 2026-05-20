@@ -1,4 +1,4 @@
-<!-- markdownlint-disable MD012 MD013 MD025 MD026 MD028 MD029 MD033 MD034 MD040 MD051 MD060 -->
+<!-- markdownlint-disable MD013 MD025 MD026 MD028 MD029 MD034 MD040 MD051 MD060 -->
 
 # Glossário do SIFAP Legado
 
@@ -77,12 +77,6 @@ Prompt útil no Copilot Chat (cole o conteúdo de 2–3 arquivos `.NSN` no chat 
 | 32  | END TRANSACTION | Commit Adabas (libera locks) | `BATCHPGT.NSN#L309` | Por registro, não por lote |
 | 33  | *DATN | Variável de sistema Natural — data atual (formato N8 AAAAMMDD) | `BATCHPGT.NSN#L113` | Determina a competência |
 | 34  | PERFORM | Chama sub-rotina interna do mesmo programa | `BATCHPGT.NSN#L251 (DET-FAIXA-RENDA-BATCH)` | Equivalente a private method |
-| 35  | RG | Registro Geral | `VALDOCS.NSN#L78-L79, L148-L160` | Documento de identidade validado separadamente do CPF |
-| 36  | CTPS | Carteira de Trabalho e Previdência Social | `VALDOCS.NSN#L52` | Coletado na entrada, mas sem validação visível neste recorte |
-| 37  | TITULO | Título de Eleitor | `VALDOCS.NSN#L52` | Outro documento capturado na interface sem regra explícita no programa |
-| 38  | DOCUMENTOS-OK | Indicador de validação documental concluída | `VALDOCS.NSN#L35, L174-L179` | Flag alterada pelo fluxo normal e pelo override de documento especial |
-| 39  | NOME | Nome completo do beneficiário | `VALBENEF.NSN#L136-L154` | Requer pelo menos nome e sobrenome |
-| 40  | Arqueologia de Software | Leitura sistemática do legado para extrair regras, dependências e mistérios | `README.md`, `GUIDE.md` | Termo de contexto usado ao longo do workshop |
 
 ## Exemplo de linha bem preenchida
 
@@ -93,8 +87,8 @@ Prompt útil no Copilot Chat (cole o conteúdo de 2–3 arquivos `.NSN` no chat 
 ## Observações
 
 - Anote aqui qualquer padrão de nomenclatura que o time identificou:
-- Convenções de prefixo/sufixo encontradas: `PGT`, `CON`, `REL`, `VLR-`, `STATUS-`, `COD-`
-- Termos ambíguos que precisam de validação com especialista: `DOCUMENTOS-OK`, prefixos especiais de CPF e uso operacional de `SEQ-AUDIT`
+- Convenções de prefixo/sufixo encontradas:
+- Termos ambíguos que precisam de validação com especialista:
 
 ---
 
@@ -116,3 +110,4 @@ Prompt útil no Copilot Chat (cole o conteúdo de 2–3 arquivos `.NSN` no chat 
 </table>
 
 <sub>↑ <a href="README.md">Voltar ao Kit PT-BR</a></sub>
+
