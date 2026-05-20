@@ -1,4 +1,4 @@
-<!-- markdownlint-disable MD013 MD025 MD026 MD028 MD029 MD034 MD040 MD051 MD060 -->
+<!-- markdownlint-disable MD012 MD013 MD025 MD026 MD028 MD029 MD033 MD034 MD040 MD051 MD060 -->
 
 # Checklist de Mistérios do SIFAP
 
@@ -34,7 +34,7 @@ Em sistemas legados de verdade, regras de negócio críticas frequentemente fica
 
 Marque [x] quando encontrar:
 
-- [ ] **MYS-001** (★★): Um programa modifica silenciosamente o status do beneficiário baseado em um critério demográfico. Onde? Por quê?
+- [x] **MYS-001** (★★): Um programa modifica silenciosamente o status do beneficiário baseado em um critério demográfico. Onde? Por quê?
 - [x] **MYS-002** (★): Um limite numérico está hardcoded no código mas contradiz a capacidade definida no DDM. Qual é o limite? Em qual programa? → `MYS-PGT-03` (`#TAB-REG` 27 posições, só 25 usadas) + `MYS-PGT-05` (`RENDA-MAX` no DDM nunca consultado) — `BATCHPGT.NSN#L120-L147, L43`
 - [x] **MYS-003** (★★★): Uma variável misteriosa é usada em cálculos mas nunca foi documentada — ninguém sabe de onde veio a constante. Qual variável? → Constantes mágicas sem documentação: `0.15` (abono), `0.03` (desconto), `500.00` (threshold), tabela de 27 fatores regionais e 5 faixas de renda inline — `BATCHPGT.NSN#L120-L159, L281-L294`; cabeçalho cita `CALCBENF`/`CALCDSCT` como fonte mas lógica está inline → `MYS-PGT-01`
 - [x] **MYS-004** (★★★): Em um mês específico do ano, o cálculo de benefício muda completamente. Qual mês? O que muda? → **Dezembro** (`#MES = 12`): gera 13º salário (`VLR-BASE × fator-reg × fator-idade`) + abono de 15% para programas tipo `'A'` + `TIPO-PGTO = 'D'` — `BATCHPGT.NSN#L275-L286`
@@ -69,7 +69,7 @@ Marque [x] quando encontrar:
 
 ## Dicas
 
-- Use **Copilot Chat** para perguntar sobre cada programa: _"Tem alguma lógica escondida neste código? Existe alguma condição que parece um workaround ou caso especial não documentado?"_
+- Use **Copilot Chat** para perguntar sobre cada programa: *"Tem alguma lógica escondida neste código? Existe alguma condição que parece um workaround ou caso especial não documentado?"*
 - Compare o que a **documentação diz** com o que o **código faz** — as inconsistências são intencionais
 - Os DDMs também contêm pistas em seus comentários
 - Se travar, levante a mão — o facilitador pode dar uma dica calibrada após 90 minutos
@@ -94,4 +94,3 @@ Marque [x] quando encontrar:
 </table>
 
 <sub>↑ <a href="README.md">Voltar ao Kit PT-BR</a></sub>
-
