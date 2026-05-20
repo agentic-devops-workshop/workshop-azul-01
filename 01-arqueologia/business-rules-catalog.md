@@ -46,21 +46,12 @@ O que NÃO conta: paginação de relatório, formatação de saída, manipulaç�
 
 | ID     | Regra de Negócio | Programa Fonte | Campos DDM | Nível de Risco | Notas |
 | ------ | ---------------- | -------------- | ---------- | -------------- | ----- |
-| BR-001 |                  |                |            |                |       |
-| BR-002 |                  |                |            |                |       |
-| BR-003 |                  |                |            |                |       |
-| BR-004 |                  |                |            |                |       |
-| BR-005 |                  |                |            |                |       |
-| BR-006 |                  |                |            |                |       |
-| BR-007 |                  |                |            |                |       |
-| BR-008 |                  |                |            |                |       |
-| BR-009 |                  |                |            |                |       |
-| BR-010 |                  |                |            |                |       |
-| BR-011 |                  |                |            |                |       |
-| BR-012 |                  |                |            |                |       |
-| BR-013 |                  |                |            |                |       |
-| BR-014 |                  |                |            |                |       |
-| BR-015 |                  |                |            |                |       |
+ | BR-001 | O CPF do beneficiário deve ser válido conforme o algoritmo do módulo 11. CPFs com todos os dígitos iguais são inválidos, exceto se começarem com 000 (caso de teste do governo). Se o dígito verificador não confere, o CPF é considerado inválido. | 01-arqueologia/legado-sifap/natural-programs/VALBENEF.NSN#L49-L109 | BENEFICIARIO.CPF | ALTO | Regra central de validação cadastral. |
+ | BR-002 | A data de nascimento do beneficiário deve ser válida: ano entre 1900 e o ano atual, mês entre 1 e 12, dia compatível com o mês (considerando ano bissexto para fevereiro). | 01-arqueologia/legado-sifap/natural-programs/VALBENEF.NSN#L111-L134 | BENEFICIARIO.DT-NASCIMENTO | MÉDIO | Garante integridade da data de nascimento. |
+ | BR-003 | O nome do beneficiário não pode ser vazio e deve conter pelo menos um espaço (nome e sobrenome). | 01-arqueologia/legado-sifap/natural-programs/VALBENEF.NSN#L136-L154 | BENEFICIARIO.NOME | MÉDIO | Evita cadastros incompletos. |
+ | BR-004 | Se informado, o campo UF do beneficiário deve estar entre as 27 siglas válidas de estados brasileiros. | 01-arqueologia/legado-sifap/natural-programs/VALBENEF.NSN#L156-L175 | BENEFICIARIO.UF | MÉDIO | Validação de domínio de UF. |
+ | BR-005 | O status do beneficiário deve ser um dos seguintes: 'A', 'S', 'C', 'I', 'D'. | 01-arqueologia/legado-sifap/natural-programs/VALBENEF.NSN#L177-L182 | BENEFICIARIO.STATUS | MÉDIO | Controle de status permitido. |
+
 
 > Adicione mais linhas conforme necessário. Lembre-se: existem **10 regras escondidas** no código!
 
@@ -78,7 +69,7 @@ O que NÃO conta: paginação de relatório, formatação de saída, manipulaç�
 
 ### Validações de Status
 
-<!-- Liste aqui as regras de transição de status (A, S, C, I, D) -->
+- BR-005: O status do beneficiário deve ser um dos seguintes: 'A', 'S', 'C', 'I', 'D'.
 
 ### Regras de Autorização
 
@@ -86,11 +77,11 @@ O que NÃO conta: paginação de relatório, formatação de saída, manipulaç�
 
 ### Regras de Negócio Temporais
 
-<!-- Liste aqui regras com prazos, datas-limite, períodos -->
+- BR-002: A data de nascimento do beneficiário deve ser válida: ano entre 1900 e o ano atual, mês entre 1 e 12, dia compatível com o mês (considerando ano bissexto para fevereiro).
 
 ## Resumo Estatístico
 
-- Total de regras encontradas: \_\_\_
+- Total de regras encontradas: 5
 - Regras críticas: \_\_\_
 - Regras com duplicação: \_\_\_
 - Regras sem documentação (escondidas): \_\_\_
