@@ -1,4 +1,4 @@
-<!-- markdownlint-disable MD013 MD025 MD026 MD028 MD029 MD034 MD040 MD051 MD060 -->
+<!-- markdownlint-disable MD012 MD013 MD025 MD026 MD028 MD029 MD033 MD034 MD040 MD051 MD060 -->
 
 # Mapa de Dependências — SIFAP Legado
 
@@ -28,7 +28,9 @@
 
 ## Diagrama de Dependências entre Programas
 
-> Substitua o exemplo abaixo pelo mapa real do seu time. **Meta:** cobrir todos os 15 programas, sem órfãos.
+> **Contribuição consolidada:** o diagrama abaixo unifica o mapa amplo deste PR com as descobertas do `develop` sobre os 3 batches do ciclo mensal.
+>
+> **Achado-chave:** não há `CALLNAT` entre os programas analisados; o acoplamento observado é via **tabelas Adabas compartilhadas** e `WORK FILE`.
 
 ```mermaid
 flowchart TD
@@ -83,8 +85,35 @@ flowchart TD
  BATCHCON -->|READ| WORK1
 ```
 
-> **Instrução:** este é apenas um exemplo inicial com 6 programas.
-> Seu time deve mapear **todos os 15 programas** e os **4 DDMs**.
+### Fluxo de negócio consolidado (sequence)
+
+```mermaid
+sequenceDiagram
+ autonumber
+ participant OPS as Operador SIFAP
+ participant PGT as BATCHPGT
+ participant DB as Adabas
+ participant BB as Banco do Brasil
+ participant CON as BATCHCON
+ participant AUD as AUDITORIA
+ participant REL as BATCHREL
+
+ Note over OPS,PGT: 1º dia útil do mês
+ OPS->>PGT: executa (usa *DATN)
+ PGT->>DB: READ BENEFICIARIO BY CPF + FIND PROGRAMA
+ PGT->>DB: STORE PAGAMENTO (STATUS='G')
+ Note over PGT,BB: arquivo de remessa NÃO encontrado nos programas analisados → investigar
+ BB-->>CON: retorno CNAB 240 (dias depois)
+ OPS->>CON: executa (INPUT competência + arquivo)
+ CON->>DB: FIND PAGAMENTO (NUM-PAGTO+CPF+COMPETENCIA)
+ CON->>DB: UPDATE PAGAMENTO (STATUS = P/D/E)
+ CON->>AUD: STORE AUDITORIA (CO ou DV)
+ OPS->>REL: executa (INPUT competência)
+ REL->>DB: READ PAGAMENTO + FIND BENEFICIARIO
+ REL-->>OPS: relatório impresso
+```
+
+> O mapa consolidado acima cobre os **15 programas** e os **4 DDMs** identificados até aqui.
 
 ## Diagrama de Fluxo de Dados (DDMs)
 
@@ -120,9 +149,9 @@ flowchart LR
 
 | Programa      | Chama (CALLNAT) | Lê (READ) DDMs                          | Escreve (STORE/UPDATE) DDMs | Observações |
 | ------------- | --------------- | ---------------------------------------- | --------------------------- | ----------- |
-| BATCHCON.NSN  | -               | AUDITORIA, PAGAMENTO, WORK FILE 1        | AUDITORIA, PAGAMENTO        | Conciliação com gravação de auditoria |
-| BATCHPGT.NSN  | -               | BENEFICIARIO, PAGAMENTO, PROGRAMA-SOCIAL | PAGAMENTO                   | Lote de processamento de pagamentos |
-| BATCHREL.NSN  | -               | BENEFICIARIO, PAGAMENTO                  | -                           | Relatório batch de pagamentos |
+| BATCHCON.NSN  | -               | AUDITORIA, PAGAMENTO, WORK FILE 1        | AUDITORIA, PAGAMENTO        | Sub-rotinas `GRAVA-AUDITORIA-CONC`/`GRAVA-AUDITORIA-DIVERG`; bloco Banco Real comentado desde 2007 |
+| BATCHPGT.NSN  | -               | BENEFICIARIO, PAGAMENTO, PROGRAMA-SOCIAL | PAGAMENTO                   | Cabeçalho cita CALCBENF/CALCDSCT, mas o cálculo está inline em `DET-FAIXA-RENDA-BATCH` |
+| BATCHREL.NSN  | -               | BENEFICIARIO, PAGAMENTO                  | -                           | Read-only; faz `FIND BENEFICIARIO` por CPF a cada pagamento (N+1 reads) |
 | CADBENEF.NSN  | -               | BENEFICIARIO                             | BENEFICIARIO                | Cadastro e atualização de beneficiário |
 | CADDEPEND.NSN | -               | BENEFICIARIO                             | BENEFICIARIO                | Atualiza dependentes no registro do titular |
 | CADPROG.NSN   | -               | PROGRAMA-SOCIAL                          | PROGRAMA-SOCIAL             | Cadastro de programa social |
@@ -212,13 +241,15 @@ flowchart LR
 
 > Liste aqui qualquer dependência circular encontrada (programa A chama B que chama A):
 
-- Nenhuma encontrada até agora.
+- Nenhuma identificada entre os programas analisados até agora.
 
 ## Programas Órfãos
 
 > Programas que não são chamados por nenhum outro (possíveis pontos de entrada ou código morto):
 
-- Neste recorte, não há CALLNAT/INCLUDE; portanto, não há arestas interprograma para confirmar órfãos reais.
+- Os 3 batches (`BATCHPGT`, `BATCHCON`, `BATCHREL`) são pontos de entrada operacionais, acionados por JCL/operador.
+- Neste recorte, como não há CALLNAT/INCLUDE, os demais programas aparecem como candidatos a execução direta ou processamento isolado.
+- Suspeita adicional: deve existir um programa de remessa CNAB de envio ao banco, pois nenhum dos programas analisados gera esse arquivo.
 
 ---
 
@@ -240,4 +271,3 @@ flowchart LR
 </table>
 
 <sub>↑ <a href="README.md">Voltar ao Kit PT-BR</a></sub>
-

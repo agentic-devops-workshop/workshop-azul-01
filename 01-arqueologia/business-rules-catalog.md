@@ -1,4 +1,4 @@
-<!-- markdownlint-disable MD013 MD025 MD026 MD028 MD029 MD034 MD040 MD051 MD060 -->
+<!-- markdownlint-disable MD012 MD013 MD025 MD026 MD028 MD029 MD033 MD034 MD040 MD051 MD060 -->
 
 # Catálogo de Regras de Negócio — SIFAP Legado
 
@@ -44,22 +44,74 @@ O que NÃO conta: paginação de relatório, formatação de saída, manipulaç�
 
 ## Regras Encontradas
 
+> **Contribuição Par 2 (Arquitetura — EA + SA):** 34 regras extraídas dos 3 batches (`BATCHPGT.NSN`, `BATCHCON.NSN`, `BATCHREL.NSN`). Outros pares completam com seus programas.
+
+### Par 2 · BATCHPGT — Geração mensal de pagamentos
+
 | ID     | Regra de Negócio | Programa Fonte | Campos DDM | Nível de Risco | Notas |
 | ------ | ---------------- | -------------- | ---------- | -------------- | ----- |
- | BR-001 | O CPF do beneficiário deve ser válido conforme o algoritmo do módulo 11. CPFs com todos os dígitos iguais são inválidos, exceto se começarem com 000 (caso de teste do governo). Se o dígito verificador não confere, o CPF é considerado inválido. | 01-arqueologia/legado-sifap/natural-programs/VALBENEF.NSN#L49-L109 | BENEFICIARIO.CPF | ALTO | Regra central de validação cadastral. |
- | BR-002 | A data de nascimento do beneficiário deve ser válida: ano entre 1900 e o ano atual, mês entre 1 e 12, dia compatível com o mês (considerando ano bissexto para fevereiro). | 01-arqueologia/legado-sifap/natural-programs/VALBENEF.NSN#L111-L134 | BENEFICIARIO.DT-NASCIMENTO | MÉDIO | Garante integridade da data de nascimento. |
- | BR-003 | O nome do beneficiário não pode ser vazio e deve conter pelo menos um espaço (nome e sobrenome). | 01-arqueologia/legado-sifap/natural-programs/VALBENEF.NSN#L136-L154 | BENEFICIARIO.NOME | MÉDIO | Evita cadastros incompletos. |
- | BR-004 | Se informado, o campo UF do beneficiário deve estar entre as 27 siglas válidas de estados brasileiros. | 01-arqueologia/legado-sifap/natural-programs/VALBENEF.NSN#L156-L175 | BENEFICIARIO.UF | MÉDIO | Validação de domínio de UF. |
- | BR-005 | O status do beneficiário deve ser um dos seguintes: 'A', 'S', 'C', 'I', 'D'. | 01-arqueologia/legado-sifap/natural-programs/VALBENEF.NSN#L177-L182 | BENEFICIARIO.STATUS | MÉDIO | Controle de status permitido. |
- | BR-006 | Se o CPF for inválido após validação de dígitos verificadores, o sistema deve marcar resultado inválido e registrar erro CPF INVALIDO. | 01-arqueologia/legado-sifap/natural-programs/VALDOCS.NSN#L68; 01-arqueologia/legado-sifap/natural-programs/VALDOCS.NSN#L69; 01-arqueologia/legado-sifap/natural-programs/VALDOCS.NSN#L102; 01-arqueologia/legado-sifap/natural-programs/VALDOCS.NSN#L123; 01-arqueologia/legado-sifap/natural-programs/VALDOCS.NSN#L140 | BENEFICIARIO.CPF | ALTO | EARS: Unwanted. Classificação: Inferida. Observação: Algoritmo de CPF implementado em duas etapas de DV. |
- | BR-007 | Se RG estiver em branco ou com menos de 5 caracteres úteis, o sistema deve invalidar RG. | 01-arqueologia/legado-sifap/natural-programs/VALDOCS.NSN#L78; 01-arqueologia/legado-sifap/natural-programs/VALDOCS.NSN#L79; 01-arqueologia/legado-sifap/natural-programs/VALDOCS.NSN#L148; 01-arqueologia/legado-sifap/natural-programs/VALDOCS.NSN#L160 | BENEFICIARIO.RG | MÉDIO | EARS: Unwanted. Classificação: Inferida. Observação: Comprimento é calculado pelo primeiro espaço encontrado. |
- | BR-008 | Quando o prefixo do CPF estiver na lista especial, o sistema deve validar o documento especial, forçar resultado válido e limpar erros acumulados. | 01-arqueologia/legado-sifap/natural-programs/VALDOCS.NSN#L41; 01-arqueologia/legado-sifap/natural-programs/VALDOCS.NSN#L88; 01-arqueologia/legado-sifap/natural-programs/VALDOCS.NSN#L174 | BENEFICIARIO.CPF, BENEFICIARIO.DOCUMENTOS-OK | ALTO | EARS: Event-driven. Classificação: Inferida. Observação: Regra de override, prevalece sobre falhas anteriores de CPF/RG. |
- | BR-009 | Se houver documento especial válido, o sistema deve exibir mensagem específica de validação especial. | 01-arqueologia/legado-sifap/natural-programs/VALDOCS.NSN#L95 | BENEFICIARIO.CPF | BAIXO | EARS: Optional. Classificação: Inferida. Observação: Saída adicional, não altera mais validações nesse ponto. |
- | BR-010 | O resultado final inicia como válido e só é alterado para inválido quando alguma validação falha, exceto no override de documento especial. | 01-arqueologia/legado-sifap/natural-programs/VALDOCS.NSN#L35; 01-arqueologia/legado-sifap/natural-programs/VALDOCS.NSN#L71; 01-arqueologia/legado-sifap/natural-programs/VALDOCS.NSN#L81; 01-arqueologia/legado-sifap/natural-programs/VALDOCS.NSN#L177 | BENEFICIARIO.CPF, BENEFICIARIO.RG | ALTO | EARS: State-driven. Classificação: Inferida. Observação: Fluxo de estado claro com exceção explícita. |
- | BR-011 | Para cálculo dos dígitos do CPF, quando resto da divisão por 11 for menor que 2, o DV calculado deve ser 0. | 01-arqueologia/legado-sifap/natural-programs/VALDOCS.NSN#L118; 01-arqueologia/legado-sifap/natural-programs/VALDOCS.NSN#L135 | BENEFICIARIO.CPF | MÉDIO | EARS: Ubiquitous. Classificação: Inferida. Observação: Regra matemática padrão do algoritmo no código. |
+| BR-PGT-001 | Competência (AAAAMM) derivada de `*DATN` na execução do batch | `01-arqueologia/legado-sifap/natural-programs/BATCHPGT.NSN#L105, L108-L110` | — | ALTO | Sem parâmetro externo; batch assume "hoje" |
+| BR-PGT-002 | `NUM-PAGTO` é sequencial, incrementado a partir do maior já gravado | `01-arqueologia/legado-sifap/natural-programs/BATCHPGT.NSN#L171-L174, L323-L324` | `PAGAMENTO.NUM-PAGTO` | ALTO | Race condition se executado em paralelo |
+| BR-PGT-003 | Beneficiário só é processado se `STATUS = 'A'` (ativo) | `01-arqueologia/legado-sifap/natural-programs/BATCHPGT.NSN#L195-L198` | `BENEFICIARIO.STATUS` | ALTO | Demais status são ignorados silenciosamente |
+| BR-PGT-004 | Não gerar 2º pagamento na mesma competência para o mesmo CPF | `01-arqueologia/legado-sifap/natural-programs/BATCHPGT.NSN#L201-L210` | `PAGAMENTO.CPF-BENEF`, `PAGAMENTO.COMPETENCIA` | CRÍTICO | Idempotência da execução |
+| BR-PGT-005 | Programa social precisa existir e ter `STATUS-PROG = 'A'` | `01-arqueologia/legado-sifap/natural-programs/BATCHPGT.NSN#L213-L230` | `PROGRAMA-SOCIAL.STATUS-PROG` | ALTO | Programa inexistente = erro; inativo = ignorado |
+| BR-PGT-006 | Fator regional indexado por `COD-REGIAO` 1..25 (tabela hardcoded 27 posições) | `01-arqueologia/legado-sifap/natural-programs/BATCHPGT.NSN#L124-L150, L240-L244` | `BENEFICIARIO.COD-REGIAO` | CRÍTICO | Valores de 1,00 a 1,40 |
+| BR-PGT-007 | Fator familiar por faixa de dependentes: 0=1,00 / 1-2=1+(n×0,05) / 3-4=1,10+((n-2)×0,03) / 5+=1,16+((n-4)×0,02) | `01-arqueologia/legado-sifap/natural-programs/BATCHPGT.NSN#L247-L259` | `BENEFICIARIO.NUM-DEPENDENTES` | CRÍTICO | Cálculo financeiro |
+| BR-PGT-008 | Fator renda em 5 faixas (300 / 600 / 1000 / 1500 / 9999,99) → (1,00 / 0,85 / 0,70 / 0,55 / 0,40) | `01-arqueologia/legado-sifap/natural-programs/BATCHPGT.NSN#L153-L162, L262` | `BENEFICIARIO.RENDA-FAMILIAR` | CRÍTICO | Faixas hardcoded; lógica em PERFORM DET-FAIXA-RENDA-BATCH |
+| BR-PGT-009 | Fator idade: ≥65=1,15 · ≥60=1,10 · <18=1,05 · demais=1,00 | `01-arqueologia/legado-sifap/natural-programs/BATCHPGT.NSN#L265-L277` | `BENEFICIARIO.DT-NASCIMENTO` | CRÍTICO | Idade pelo ano somente |
+| BR-PGT-010 | Valor benefício = `VLR-BASE × fator-reg × fator-fam × fator-rnd × fator-idade × (1 + FATOR-REAJUSTE)` | `01-arqueologia/legado-sifap/natural-programs/BATCHPGT.NSN#L280-L282` | `PROGRAMA-SOCIAL.VLR-BASE`, `.FATOR-REAJUSTE` | CRÍTICO | Fórmula principal |
+| BR-PGT-011 | Valores monetários sofrem **truncamento** para 2 casas (não arredondamento) | `01-arqueologia/legado-sifap/natural-programs/BATCHPGT.NSN#L284-L285, L295-L296, L310-L311, L319-L320` | `PAGAMENTO.VLR-*` | CRÍTICO | Divergente de BR-REL-003 |
+| BR-PGT-012 | Em dezembro (`#MES = 12`), gera 13º = `VLR-BASE × fator-reg × fator-idade` — `TIPO-PGTO = 'D'` | `01-arqueologia/legado-sifap/natural-programs/BATCHPGT.NSN#L292-L304` | `PAGAMENTO.TIPO-PGTO` | CRÍTICO | Só ocorre 1 vez/ano |
+| BR-PGT-013 | Em dezembro, programas com `TIPO = 'A'` recebem abono adicional de 15% do valor benefício | `01-arqueologia/legado-sifap/natural-programs/BATCHPGT.NSN#L298-L303` | `PROGRAMA-SOCIAL.TIPO`, `PAGAMENTO.VLR-ABONO` | CRÍTICO | Combina com 13º |
+| BR-PGT-014 | Desconto = 3% do bruto quando bruto > R$ 500,00; senão zero | `01-arqueologia/legado-sifap/natural-programs/BATCHPGT.NSN#L308-L311` | `PAGAMENTO.VLR-DESCONTO` | CRÍTICO | Cabeçalho dizia chamar CALCDSCT — inline |
+| BR-PGT-015 | Líquido nunca pode ser negativo (clamp em zero) | `01-arqueologia/legado-sifap/natural-programs/BATCHPGT.NSN#L316-L318` | `PAGAMENTO.VLR-LIQUIDO` | ALTO | Defensivo |
+| BR-PGT-016 | Pagamento nasce com `STATUS-PGTO = 'G'` (Gerado) | `01-arqueologia/legado-sifap/natural-programs/BATCHPGT.NSN#L332` | `PAGAMENTO.STATUS-PGTO` | ALTO | Estado inicial do ciclo |
+| BR-PGT-017 | Deduplicação por CPF no loop assume ordenação ascendente (READ BY CPF) | `01-arqueologia/legado-sifap/natural-programs/BATCHPGT.NSN#L178-L179, L182` | `BENEFICIARIO.CPF` | ALTO | Comentário: "sistemas downstream dependem" |
+| BR-PGT-018 | Idade calculada apenas por ano (`#ANO - #ANO-NASC`), sem considerar mês/dia | `01-arqueologia/legado-sifap/natural-programs/BATCHPGT.NSN#L236-L237` | `BENEFICIARIO.DT-NASCIMENTO` | MÉDIO | Beneficiário faz 65 em fev recebe fator desde jan |
 
+### Par 2 · BATCHCON — Conciliação bancária CNAB 240
 
-> Adicione mais linhas conforme necessário. Lembre-se: existem **10 regras escondidas** no código!
+| ID     | Regra de Negócio | Programa Fonte | Campos DDM | Nível de Risco | Notas |
+| ------ | ---------------- | -------------- | ---------- | -------------- | ----- |
+| BR-CON-001 | Processa apenas registros CNAB tipo `'3'` (detalhe) | `01-arqueologia/legado-sifap/natural-programs/BATCHCON.NSN#L115-L118` | — | ALTO | Header/trailer ignorados |
+| BR-CON-002 | Layout CNAB 240 BB: banco 1-3, lote 4-7, tipo 8, CPF 44-54, valor 120-134, data 140-147, num doc 74-83, cod ret 231-232 | `01-arqueologia/legado-sifap/natural-programs/BATCHCON.NSN#L111-L113, L120-L124` | — | CRÍTICO | Posições fixas hardcoded |
+| BR-CON-003 | Valor do CNAB chega em centavos; conversão por divisão por 100 | `01-arqueologia/legado-sifap/natural-programs/BATCHCON.NSN#L130-L132` | — | CRÍTICO | Arredondamento implícito |
+| BR-CON-004 | Match exige `NUM-PAGTO + CPF-BENEF + COMPETENCIA` coincidentes | `01-arqueologia/legado-sifap/natural-programs/BATCHCON.NSN#L138-L144` | `PAGAMENTO.NUM-PAGTO`, `.CPF-BENEF`, `.COMPETENCIA` | CRÍTICO | Chave composta |
+| BR-CON-005 | Divergência de valor: `\|VLR-LIQUIDO − VLR-RETORNO\| > 0,01` | `01-arqueologia/legado-sifap/natural-programs/BATCHCON.NSN#L155-L160` | `PAGAMENTO.VLR-LIQUIDO` | CRÍTICO | Tolerância de 1 centavo |
+| BR-CON-006 | Cod retorno `'00'` → `STATUS = 'P'`, grava `DT-PGTO` e `BANCO = 1` (BB) | `01-arqueologia/legado-sifap/natural-programs/BATCHCON.NSN#L172-L180` | `PAGAMENTO.STATUS-PGTO`, `.DT-PAGAMENTO`, `.COD-BANCO` | CRÍTICO | Pagamento confirmado |
+| BR-CON-007 | Cod retorno `'01'` → `STATUS = 'D'` (Devolvido) | `01-arqueologia/legado-sifap/natural-programs/BATCHCON.NSN#L181-L187` | `PAGAMENTO.STATUS-PGTO` | ALTO | Reenviar? |
+| BR-CON-008 | Cod retorno `'02'` → `STATUS = 'E'` (Estornado) | `01-arqueologia/legado-sifap/natural-programs/BATCHCON.NSN#L188-L194` | `PAGAMENTO.STATUS-PGTO` | ALTO | Reversão |
+| BR-CON-009 | Códigos diferentes de 00/01/02: log "DESCONHECIDO" sem alterar pagamento | `01-arqueologia/legado-sifap/natural-programs/BATCHCON.NSN#L195-L198` | — | MÉDIO | Limitação |
+| BR-CON-010 | Toda conciliação (match ou divergência) gera registro em `AUDITORIA` | `01-arqueologia/legado-sifap/natural-programs/BATCHCON.NSN#L167, L201, L238-L270` | `AUDITORIA.*` | ALTO | Trilha imutável |
+| BR-CON-011 | Auditoria de batch grava `USUARIO = 'BATCH'`, `ACAO = 'CO'` (conciliado) ou `'DV'` (divergência) | `01-arqueologia/legado-sifap/natural-programs/BATCHCON.NSN#L244-L245, L259-L260` | `AUDITORIA.USUARIO`, `.ACAO` | MÉDIO | Usuário literal |
+
+### Par 2 · BATCHREL — Relatório consolidado mensal
+
+| ID     | Regra de Negócio | Programa Fonte | Campos DDM | Nível de Risco | Notas |
+| ------ | ---------------- | -------------- | ---------- | -------------- | ----- |
+| BR-REL-001 | Agrupamento em 5 macro-regiões por intervalo de `COD-REGIAO`: 1-5 Norte, 6-10 Nordeste, 11-15 Sudeste, 16-20 Sul, demais Centro-Oeste | `01-arqueologia/legado-sifap/natural-programs/BATCHREL.NSN#L116-L133` | `BENEFICIARIO.COD-REGIAO` | ALTO | Mapeamento por faixa contínua |
+| BR-REL-002 | 5 buckets de status: G→Gerado · P→Pago · C→Cancelado · D→Devolvido · E→Estornado; demais caem em "Gerado" | `01-arqueologia/legado-sifap/natural-programs/BATCHREL.NSN#L146-L159` | `PAGAMENTO.STATUS-PGTO` | MÉDIO | Default suspeito |
+| BR-REL-003 | Relatório aplica **arredondamento bancário** (+0,005 e truncamento) — diverge do truncamento puro de BR-PGT-011 | `01-arqueologia/legado-sifap/natural-programs/BATCHREL.NSN#L136-L139` | — | CRÍTICO | Comentário explícito de divergência |
+| BR-REL-004 | Layout impressora: 66 linhas/página, 132 colunas | `01-arqueologia/legado-sifap/natural-programs/BATCHREL.NSN#L59, L70` | — | BAIXO | Apresentação |
+| BR-REL-005 | Totaliza bruto/desconto/líquido por região e status; bucket de status só soma bruto | `01-arqueologia/legado-sifap/natural-programs/BATCHREL.NSN#L137-L167` | `PAGAMENTO.VLR-*` | ALTO | Auditoria contábil |
+
+> Outros pares: adicionem suas linhas abaixo conforme seus programas.
+
+### Validações cadastrais e documentais (`VALBENEF` / `VALDOCS`)
+
+| ID | Regra de Negócio | Programa Fonte | Campos DDM | Nível de Risco | Notas |
+| --- | --- | --- | --- | --- | --- |
+| BR-VAL-001 | O CPF do beneficiário deve ser válido conforme o algoritmo do módulo 11. CPFs com todos os dígitos iguais são inválidos, exceto prefixos especiais controlados em outro módulo. | `01-arqueologia/legado-sifap/natural-programs/VALBENEF.NSN#L49-L109` | `BENEFICIARIO.CPF` | ALTO | Regra central de validação cadastral. |
+| BR-VAL-002 | A data de nascimento do beneficiário deve ser válida: ano entre 1900 e o ano atual, mês entre 1 e 12 e dia compatível com o mês (incluindo ano bissexto). | `01-arqueologia/legado-sifap/natural-programs/VALBENEF.NSN#L111-L134` | `BENEFICIARIO.DT-NASCIMENTO` | MÉDIO | Garante integridade do dado temporal. |
+| BR-VAL-003 | O nome do beneficiário não pode ser vazio e deve conter pelo menos nome e sobrenome. | `01-arqueologia/legado-sifap/natural-programs/VALBENEF.NSN#L136-L154` | `BENEFICIARIO.NOME` | MÉDIO | Evita cadastros incompletos. |
+| BR-VAL-004 | Se informado, o campo UF do beneficiário deve estar entre as 27 siglas válidas de estados brasileiros. | `01-arqueologia/legado-sifap/natural-programs/VALBENEF.NSN#L156-L175` | `BENEFICIARIO.UF` | MÉDIO | Validação de domínio de UF. |
+| BR-VAL-005 | O status do beneficiário deve ser um dos seguintes: `A`, `S`, `C`, `I`, `D`. | `01-arqueologia/legado-sifap/natural-programs/VALBENEF.NSN#L177-L182` | `BENEFICIARIO.STATUS` | MÉDIO | Controle de status permitido no cadastro. |
+| BR-DOC-001 | Se o CPF for inválido após validação dos dígitos verificadores, o sistema deve marcar o resultado como inválido e registrar erro `CPF INVALIDO`. | `01-arqueologia/legado-sifap/natural-programs/VALDOCS.NSN#L68-L69, L102, L123, L140` | `BENEFICIARIO.CPF` | ALTO | Algoritmo de CPF implementado em duas etapas de DV. |
+| BR-DOC-002 | Se o RG estiver em branco ou com menos de 5 caracteres úteis, o sistema deve invalidar o documento. | `01-arqueologia/legado-sifap/natural-programs/VALDOCS.NSN#L78-L79, L148, L160` | `BENEFICIARIO.RG` | MÉDIO | Comprimento calculado pelo primeiro espaço encontrado. |
+| BR-DOC-003 | Quando o prefixo do CPF estiver na lista especial, o sistema deve validar o documento especial, forçar resultado válido e limpar erros acumulados. | `01-arqueologia/legado-sifap/natural-programs/VALDOCS.NSN#L41, L88, L174-L179` | `BENEFICIARIO.CPF`, `BENEFICIARIO.DOCUMENTOS-OK` | ALTO | Regra de override que prevalece sobre falhas anteriores. |
+| BR-DOC-004 | Se houver documento especial válido, o sistema deve exibir mensagem específica de validação especial. | `01-arqueologia/legado-sifap/natural-programs/VALDOCS.NSN#L95` | `BENEFICIARIO.CPF` | BAIXO | Saída adicional para o operador. |
+| BR-DOC-005 | O resultado final inicia como válido e só é alterado para inválido quando alguma validação falha, exceto no override de documento especial. | `01-arqueologia/legado-sifap/natural-programs/VALDOCS.NSN#L35, L71, L81, L177` | `BENEFICIARIO.CPF`, `BENEFICIARIO.RG` | ALTO | Fluxo de estado com exceção explícita. |
+| BR-DOC-006 | Para cálculo dos dígitos do CPF, quando o resto da divisão por 11 for menor que 2, o DV calculado deve ser 0. | `01-arqueologia/legado-sifap/natural-programs/VALDOCS.NSN#L118, L135` | `BENEFICIARIO.CPF` | MÉDIO | Regra matemática implementada no código. |
 
 ## Exemplo de linha bem preenchida
 
@@ -71,28 +123,58 @@ O que NÃO conta: paginação de relatório, formatação de saída, manipulaç�
 
 ### Cálculos Financeiros
 
-- Nenhuma regra financeira adicional identificada neste recorte.
+<!-- Liste aqui as regras relacionadas a cálculos de valores, benefícios, etc. -->
+- BR-PGT-006 — Fator regional (tabela 27 posições, 1,00–1,40)
+- BR-PGT-007 — Fator familiar por faixa de dependentes
+- BR-PGT-008 — Fator renda em 5 faixas (1,00→0,40)
+- BR-PGT-009 — Fator idade (≥65 / ≥60 / <18 / demais)
+- BR-PGT-010 — Fórmula principal do benefício
+- BR-PGT-011 — Truncamento para 2 casas `(×100)/100` ⚠️ diverge de BR-REL-003
+- BR-PGT-012 — 13º salário em dezembro
+- BR-PGT-013 — Abono 15% em dezembro (programas tipo `'A'`)
+- BR-PGT-014 — Desconto 3% do bruto quando bruto > R$ 500,00
+- BR-PGT-015 — Líquido nunca negativo (clamp em zero)
+- BR-CON-003 — Conversão valor CNAB (centavos ÷ 100)
+- BR-CON-005 — Divergência de valor: tolerância de R$ 0,01
+- BR-REL-003 — Arredondamento bancário `+0,005` ⚠️ diverge de BR-PGT-011
+- BR-REL-005 — Totalização bruto/desconto/líquido por região e status
 
 ### Validações de Status
 
-- BR-005: O status do beneficiário deve ser um dos seguintes: 'A', 'S', 'C', 'I', 'D'.
-- BR-010: O resultado final inicia como válido e é alterado para inválido quando há falha de validação, exceto override por documento especial.
+<!-- Liste aqui as regras de transição de status (A, S, C, I, D) -->
+- BR-PGT-003 — `STATUS = 'A'` para processar beneficiário
+- BR-PGT-005 — `STATUS-PROG = 'A'` para processar programa social
+- BR-PGT-016 — Pagamento nasce com `STATUS-PGTO = 'G'` (Gerado)
+- BR-CON-006 — Cod retorno `'00'` → `STATUS = 'P'` (Pago)
+- BR-CON-007 — Cod retorno `'01'` → `STATUS = 'D'` (Devolvido)
+- BR-CON-008 — Cod retorno `'02'` → `STATUS = 'E'` (Estornado)
+- BR-REL-002 — 5 buckets de status no relatório; desconhecidos caem em "Gerado"
+- BR-VAL-005 — Status cadastral aceito apenas em `A`, `S`, `C`, `I` ou `D`
+- BR-DOC-005 — Resultado documental começa em válido e transita para inválido quando há erro
 
 ### Regras de Autorização
 
-- BR-008: Prefixo especial de CPF ativa override de validação documental.
+<!-- Liste aqui as regras de quem pode fazer o quê -->
+- BR-PGT-004 — Idempotência: não gerar 2º pagamento na mesma competência/CPF
+- BR-CON-011 — Auditoria batch usa `USUARIO = 'BATCH'` literal; `ACAO = 'CO'` ou `'DV'`
+- BR-DOC-003 — Prefixo especial de CPF autoriza override da validação documental padrão
 
 ### Regras de Negócio Temporais
 
-- BR-002: A data de nascimento do beneficiário deve ser válida: ano entre 1900 e o ano atual, mês entre 1 e 12, dia compatível com o mês (considerando ano bissexto para fevereiro).
-- BR-011: No cálculo de dígitos do CPF, quando o resto da divisão por 11 for menor que 2, o DV deve ser 0.
+<!-- Liste aqui regras com prazos, datas-limite, períodos -->
+- BR-PGT-001 — Competência = AAAAMM derivado de `*DATN` (mensal, 1º dia útil)
+- BR-PGT-012 — 13º salário somente em dezembro (`#MES = 12`)
+- BR-PGT-013 — Abono 15% somente em dezembro, programas tipo `'A'`
+- BR-PGT-018 — Idade por ano apenas (`#ANO − #ANO-NASC`), sem mês/dia
+- BR-CON-004 — Match de conciliação usa competência informada via `INPUT`
+- BR-VAL-002 — Data de nascimento precisa ser coerente com calendário e ano atual
 
 ## Resumo Estatístico
 
-- Total de regras encontradas: 11
-- Regras críticas: 0
-- Regras com duplicação: 1 (BR-001 e BR-006 tratam validação de CPF em módulos distintos)
-- Regras sem documentação (escondidas): 1 (BR-008)
+- Total de regras encontradas: **45**
+- Regras críticas: **15**
+- Regras com duplicação: **3** (BR-PGT-011 ↔ BR-REL-003; BR-PGT-014 ↔ CALCDSCT citado no cabeçalho; BR-VAL-001 ↔ BR-DOC-001)
+- Regras sem documentação (escondidas): **7** (incluindo o override documental de `BR-DOC-003`)
 
 ---
 
@@ -114,4 +196,3 @@ O que NÃO conta: paginação de relatório, formatação de saída, manipulaç�
 </table>
 
 <sub>↑ <a href="README.md">Voltar ao Kit PT-BR</a></sub>
-
