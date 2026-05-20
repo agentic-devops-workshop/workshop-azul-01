@@ -1,0 +1,96 @@
+{
+  "name": "SIFAP Modernization Workshop",
+  "image": "mcr.microsoft.com/devcontainers/java:21-jammy",
+  "features": {
+    "ghcr.io/devcontainers/features/docker-outside-of-docker:1": {},
+    "ghcr.io/devcontainers/features/github-cli:1": {},
+    "ghcr.io/devcontainers/features/node:20": {
+      "version": "20"
+    },
+    "ghcr.io/devcontainers/features/postgres:15": {}
+  },
+  "customizations": {
+    "vscode": {
+      "extensions": [
+        "GitHub.copilot",
+        "GitHub.copilot-chat",
+        "GitHub.github-vscode-theme",
+        "ms-vscode.vscode-typescript-next",
+        "dbaeumer.vscode-eslint",
+        "esbenp.prettier-vscode",
+        "ms-vscode.makefile-tools",
+        "ms-vscode-remote.remote-containers",
+        "redhat.vscode-yaml",
+        "redhat.java",
+        "vscjava.vscode-maven",
+        "vscjava.vscode-spring-boot-dashboard",
+        "oracle.mysql-shell-for-vs-code",
+        "ms-azuretools.vscode-docker",
+        "ms-azuretools.vscode-azurefunctions"
+      ],
+      "settings": {
+        "java.home": "/usr/local/sdkman/candidates/java/21.0.1-oracle",
+        "maven.executable.path": "/usr/local/sdkman/candidates/maven/latest/bin/mvn",
+        "[java]": {
+          "editor.formatOnSave": true,
+          "editor.defaultFormatter": "redhat.java"
+        },
+        "[typescript]": {
+          "editor.defaultFormatter": "esbenp.prettier-vscode",
+          "editor.formatOnSave": true
+        },
+        "[javascript]": {
+          "editor.defaultFormatter": "esbenp.prettier-vscode",
+          "editor.formatOnSave": true
+        },
+        "editor.rulers": [
+          120
+        ],
+        "files.exclude": {
+          "**/node_modules": true,
+          "**/.git": true,
+          "**/.DS_Store": true
+        },
+        "editor.formatOnSave": true,
+        "editor.codeActionsOnSave": {
+          "source.fixAll.eslint": "explicit"
+        }
+      }
+    }
+  },
+  "containerEnv": {
+    "POSTGRES_DB": "sifap",
+    "POSTGRES_USER": "sifap",
+    "POSTGRES_PASSWORD": "sifap_local",
+    "SIFAP_JWT_SECRET": "dev-secret-min-32-chars-long!!!!!"
+  },
+  "forwardPorts": [
+    8080,
+    3001,
+    5432
+  ],
+  "portsAttributes": {
+    "8080": {
+      "label": "Backend (Spring Boot)",
+      "onAutoForward": "notify"
+    },
+    "3001": {
+      "label": "Frontend (Next.js)",
+      "onAutoForward": "notify"
+    },
+    "5432": {
+      "label": "PostgreSQL",
+      "onAutoForward": "ignore"
+    }
+  },
+  "remoteEnv": {
+    "PATH": "/usr/local/sdkman/candidates/java/21.0.1-oracle/bin:${containerEnv:PATH}",
+    "JAVA_HOME": "/usr/local/sdkman/candidates/java/21.0.1-oracle"
+  },
+  "mounts": [
+    "source=/var/run/docker.sock,target=/var/run/docker.sock,type=bind"
+  ],
+  "postCreateCommand": "bash .devcontainer/post-create.sh",
+  "postStartCommand": "docker-compose --version && docker --version",
+  "workspaceFolder": "/workspaces/workshop-azul-01"
+}

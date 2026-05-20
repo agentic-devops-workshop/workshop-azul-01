@@ -145,11 +145,11 @@ Antes de escrever qualquer EARS no Estágio 2, seu par DEVE ter lido os programa
 
 | Par | Persona A | Persona B | Fase do SDLC |
 |------|-----------|-----------|------------|
-| 1 · Visão | [ ] 01 Product Owner — nome? | [ ] 02 Requirements Engineer — nome? | Descoberta + Especificação |
-| 2 · Arquitetura | [ ] 03 Enterprise Architect — nome? | [ ] 04 Software Architect — nome? | Especificação + Design |
-| 3 · Implementação | [ ] 05 Technical Lead — nome? | [ ] 06 Developer — nome? | Implementação + Evolução |
-| 4 · Qualidade | [ ] 07 DBA — nome? | [ ] 08 QA Engineer — nome? | Implementação (dados + testes) |
-| 5 · Operações | [ ] 09 DevOps Engineer — nome? | [ ] 10 Tech Writer — nome? | Transversal + Evolução |
+| 1 · Visão | [x] 01 Product Owner — Maria Dantas | [x] 02 Requirements Engineer — Maria Dantas | Descoberta + Especificação |
+| 2 · Arquitetura | [x] 03 Enterprise Architect — Douglas Cavalcante | [x] 04 Software Architect — nome? | Especificação + Design |
+| 3 · Implementação | [x] 05 Technical Lead — Gabriel Kristian | [x] 06 Developer — Gabriel Kristian | Implementação + Evolução |
+| 4 · Qualidade | [x] 07 DBA — Liubliana Stolz | [x] 08 QA Engineer — Liubliana Stolz | Implementação (dados + testes) |
+| 5 · Operações | [x] 09 DevOps Engineer — Gustavo Marinho | [x] 10 Tech Writer — Gustavo Marinho | Transversal + Evolução |
 
 Veja [`00-TEAM-FLOW.md`](../00-TEAM-FLOW.md) para diagramas de passagem e a linha do tempo do dia.
 
