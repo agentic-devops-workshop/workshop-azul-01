@@ -37,7 +37,7 @@ flowchart TD
  subgraph CAD["Programas de Cadastro (Par 1 — Visão)"]
    CADBENEF["CADBENEF.NSN<br/>Cadastro Beneficiário<br/>ARQ 150"]
    CADDEPEND["CADDEPEND.NSN<br/>Cadastro Dependentes<br/>ARQ 150"]
-   CADPROG["CADPROG.NSN<br/>Cadastro Programas<br/>ARQ 155"]
+  CADPROG["CADPROG.NSN<br/>Cadastro Programas<br/>ARQ 151"]
  end
 
  subgraph BATCH["Programas Batch (Par 2 — Arquitetura)"]
@@ -206,23 +206,31 @@ flowchart LR
 
 ## Tabela de Dependências
 
-| Programa | Chama (CALLNAT) | Lê (READ/FIND) DDMs | Escreve (STORE/UPDATE) DDMs | Sub-rotinas internas | Observações |
-| --- | --- | --- | --- | --- | --- |
-| **CADBENEF.NSN** | _nenhum_ | `BENEFICIARIO` (FIND por CPF) | `BENEFICIARIO` (STORE inclusão, UPDATE alteração) | `VALIDA-CPF` (módulo 11) | Par 1; ARQ 150; valida CPF, nome, DT-NASC, sexo; status 'S' se >75 anos |
-| **CADDEPEND.NSN** | _nenhum_ | `BENEFICIARIO` (FIND por CPF titular) | `BENEFICIARIO` (UPDATE PE group) | — | Par 1; dependentes embedded no mesmo ARQ 150; limite 5 dependentes |
-| **CADPROG.NSN** | _nenhum_ | `PROGRAMA-SOCIAL` (FIND por COD-PROGRAMA) | `PROGRAMA-SOCIAL` (STORE inclusão + FATOR-K) | — | Par 1; ARQ 155; calcula `FATOR-K = 1.00 + (FATOR-REAJ * 0.347215)` [BR-PROG-004] |
-| **BATCHPGT.NSN** | _nenhum_ (cabeçalho cita CALCBENF/CALCDSCT mas código é inline — L11) | `BENEFICIARIO` (READ BY CPF), `PROGRAMA-SOCIAL` (FIND), `PAGAMENTO` (FIND) | `PAGAMENTO` (STORE) | `DET-FAIXA-RENDA-BATCH` | Par 2; batch noturno; lógica de cálculo duplicada inline |
-| **BATCHCON.NSN** | _nenhum_ | `AUDITORIA` (READ BY SEQ DESC), `PAGAMENTO` (FIND), work file CNAB 240 | `PAGAMENTO` (UPDATE), `AUDITORIA` (STORE) | `GRAVA-AUDITORIA-CONC`, `GRAVA-AUDITORIA-DIVERG` | Par 2; bloco Banco Real comentado desde 2007 |
-| **BATCHREL.NSN** | _nenhum_ | `PAGAMENTO` (READ BY COMPETENCIA), `BENEFICIARIO` (FIND) | _nenhum_ (read-only — saída só em impressora) | — | Par 2; N+1 reads no FIND BENEFICIARIO |
-| **CALCBENF.NSN** | _nenhum_ | `BENEFICIARIO`, `PROGRAMA-SOCIAL` | — | — | Par 3; retorna valor calculado; não aplica fator idade [MYS-001] |
-| **CALCCORR.NSN** | _nenhum_ | `PROGRAMA-SOCIAL` | — | — | Par 3; correção monetária IPCA; tabela 2010–2014 desatualizada |
-| **CALCDSCT.NSN** | _nenhum_ | `BENEFICIARIO` | — | — | Par 3; 4 faixas desconto; teto 30% exceto tipo 'J' |
-| **VALBENEF.NSN** | _nenhum_ | `BENEFICIARIO` | — | — | Par 4; validação de elegibilidade |
-| **VALDOCS.NSN** | _nenhum_ | `BENEFICIARIO` | — | — | Par 4; validação documental |
-| **VALELEG.NSN** | _nenhum_ | `BENEFICIARIO`, `PROGRAMA-SOCIAL` | — | — | Par 4; cruza regras de elegibilidade |
-| **CONSBENEF.NSN** | _nenhum_ | `BENEFICIARIO` | — | — | Par 5; somente consulta |
-| **RELPGT.NSN** | _nenhum_ | `PAGAMENTO`, `BENEFICIARIO` | — | — | Par 5; relatório |
-| **RELAUDIT.NSN** | _nenhum_ | `AUDITORIA` | — | — | Par 5; filtra ações 'EX' — ocultadas [MYS-010] |
+| Programa | Chama (CALLNAT) | Lê (READ) DDMs | Escreve (STORE/UPDATE) DDMs | Observações |
+| --- | --- | --- | --- | --- |
+| **CADBENEF.NSN** | — (subroutine interna VALIDA-CPF) | BENEFICIARIO (FIND por CPF) | BENEFICIARIO (STORE inclusão, UPDATE alteração) | Par Visão; ARQ 150 |
+| **CADDEPEND.NSN** | — | BENEFICIARIO (FIND por CPF titular) | BENEFICIARIO (UPDATE PE group) | Par Visão; dependentes embedded no mesmo ARQ 150 |
+| **CADPROG.NSN** | — | PROGRAMA-SOCIAL (FIND por COD-PROGRAMA) | PROGRAMA-SOCIAL (STORE inclusão) | Par Visão; ARQ 151 |
+| **BATCHPGT.NSN** | CALCBENF.NSN, CALCDSCT.NSN | BENEFICIARIO, PAGAMENTO | PAGAMENTO (STORE) | Par Arquitetura; batch noturno |
+| **BATCHREL.NSN** | — | PAGAMENTO, BENEFICIARIO | — | Par Arquitetura; somente leitura |
+| **BATCHCON.NSN** | — | PAGAMENTO | PAGAMENTO (UPDATE consolidação), AUDITORIA (STORE) | Par Arquitetura |
+| **CALCBENF.NSN** | — | BENEFICIARIO, PROGRAMA-SOCIAL | — | Par Implementação; retorna valor calculado |
+| **CALCCORR.NSN** | — | PROGRAMA-SOCIAL | — | Par Implementação; correção monetária |
+| **CALCDSCT.NSN** | — | BENEFICIARIO | — | Par Implementação; regra 30% BR-013 |
+| **VALBENEF.NSN** | — | BENEFICIARIO | — | Par Qualidade; validação de elegibilidade |
+| **VALDOCS.NSN** | — | BENEFICIARIO | — | Par Qualidade; validação documental |
+| **VALELEG.NSN** | — | BENEFICIARIO, PROGRAMA-SOCIAL | — | Par Qualidade; cruza regras de elegibilidade |
+| **CONSBENEF.NSN** | — | BENEFICIARIO | — | Par Operações; somente consulta |
+| **RELPGT.NSN** | — | PAGAMENTO, BENEFICIARIO | — | Par Operações; relatório |
+| **RELAUDIT.NSN** | — | AUDITORIA | — | Par Operações; trilha de auditoria |
+
+> Linhas preenchidas pelo Par 2. Outros pares completam.
+
+| Programa | Chama (CALLNAT) | Lê (READ/FIND) DDMs | Escreve (STORE/UPDATE) DDMs | Observações |
+| ------------ | --------------- | -------------- | --------------------------- | ----------- |
+| BATCHPGT.NSN | _nenhum_ (cabeçalho cita CALCBENF/CALCDSCT mas código é inline — `BATCHPGT.NSN#L11`) | `BENEFICIARIO` (READ BY CPF), `PROGRAMA-SOCIAL` (FIND), `PAGAMENTO` (FIND) | `PAGAMENTO` (STORE) | Sub-rotina interna `DET-FAIXA-RENDA-BATCH`; lógica de cálculo duplicada inline |
+| BATCHCON.NSN | _nenhum_ | `AUDITORIA` (READ BY SEQ DESC), `PAGAMENTO` (FIND), work file CNAB 240 | `PAGAMENTO` (UPDATE), `AUDITORIA` (STORE) | Sub-rotinas internas `GRAVA-AUDITORIA-CONC`, `GRAVA-AUDITORIA-DIVERG`; bloco Banco Real comentado desde 2007 |
+| BATCHREL.NSN | _nenhum_ | `PAGAMENTO` (READ BY COMPETENCIA), `BENEFICIARIO` (FIND) | _nenhum_ (read-only — saída só em impressora) | N+1 reads no FIND BENEFICIARIO; paginação declarada mas não usada |
 
 ## Dependências Circulares
 

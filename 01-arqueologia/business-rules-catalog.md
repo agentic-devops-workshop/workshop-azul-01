@@ -78,11 +78,29 @@ O que NÃO conta: paginação de relatório, formatação de saída, manipulaç�
 
 ### Par 2 · BATCHPGT — Geração mensal de pagamentos
 
-| ID | Regra de Negócio | Programa Fonte | Campos DDM | Nível de Risco | Notas |
-| --- | --- | --- | --- | --- | --- |
-| BR-PGT-001 | Competência (AAAAMM) derivada de `*DATN` na execução do batch | `01-arqueologia/legado-sifap/natural-programs/BATCHPGT.NSN#L105-L110` | — | ALTO | Sem parâmetro externo; batch assume "hoje" |
-| BR-PGT-002 | `NUM-PAGTO` é sequencial, incrementado a partir do maior já gravado | `01-arqueologia/legado-sifap/natural-programs/BATCHPGT.NSN#L171-L174` | `PAGAMENTO.NUM-PAGTO` | ALTO | Race condition se executado em paralelo |
-| BR-PGT-003 | Beneficiário só é processado se `STATUS = 'A'` (ativo) | `01-arqueologia/legado-sifap/natural-programs/BATCHPGT.NSN#L195-L198` | `BENEFICIARIO.STATUS` | ALTO | Demais status ignorados silenciosamente |
+| ID     | Regra de Negócio | Programa Fonte | Campos DDM | Nível de Risco | Notas |
+| ------ | ---------------- | -------------- | ---------- | -------------- | ----- |
+| BR-001 | CPF é obrigatório e deve ser válido pelo algoritmo módulo 11 (dois dígitos verificadores) | `01-arqueologia/legado-sifap/natural-programs/CADBENEF.NSN#L105-L112` | `BENEFICIARIO.AB NUM-CPF` | CRÍTICO | Regra adicionada em 2005 por MARCIA HELENA; falha na validação rejeita o cadastro |
+| BR-002 | Operação de cadastro aceita apenas I (Inclusão) ou A (Alteração); qualquer outro valor aborta | `01-arqueologia/legado-sifap/natural-programs/CADBENEF.NSN#L79-L83` | — | ALTO | Controle de fluxo principal do programa |
+| BR-003 | Em inclusão, CPF não pode já existir na base (ARQ 150); em alteração, CPF deve existir | `01-arqueologia/legado-sifap/natural-programs/CADBENEF.NSN#L139-L148` | `BENEFICIARIO.AB NUM-CPF` | CRÍTICO | Evita duplicidade; regra de integridade da base de 4,2M registros |
+| BR-004 | Nome, data de nascimento e sexo são obrigatórios no cadastro | `01-arqueologia/legado-sifap/natural-programs/CADBENEF.NSN#L119-L131` | `BENEFICIARIO.AC NOME-COMPLETO`, `BENEFICIARIO.AF DT-NASCIMENTO`, `BENEFICIARIO.AG SEXO` | ALTO | Sexo aceito: M ou F (DDM define M/F/I mas programa não aceita I) |
+| BR-005 | Status inicial de inclusão é sempre 'A' (Ativo) | `01-arqueologia/legado-sifap/natural-programs/CADBENEF.NSN#L163-L165` | `BENEFICIARIO.CE SIT-BENEFICIARIO` | ALTO | Status não é informado pelo usuário; definido pelo sistema |
+| BR-006 | Beneficiário com idade calculada acima de 75 anos recebe status 'S' na inclusão | `01-arqueologia/legado-sifap/natural-programs/CADBENEF.NSN#L167-L169` | `BENEFICIARIO.CE SIT-BENEFICIARIO`, `BENEFICIARIO.AF DT-NASCIMENTO` | CRÍTICO | Conflito: DDM define 'S' como Suspenso; programa usa 'S' como categoria etária de idoso — semântica divergente |
+| BR-007 | Inclusão de dependente exige que o titular (CPF) exista e esteja ativo na base | `01-arqueologia/legado-sifap/natural-programs/CADDEPEND.NSN#L46-L56` | `BENEFICIARIO.CE SIT-BENEFICIARIO` | ALTO | Titular com status C (Cancelado) ou D (Desligado) bloqueia qualquer inclusão de dependente |
+| BR-008 | Limite máximo de 5 dependentes por beneficiário titular | `01-arqueologia/legado-sifap/natural-programs/CADDEPEND.NSN#L63-L66` | `BENEFICIARIO.DA GRP-DEPENDENTE` | ALTO | DDM comporta até 10 ocorrências (PE); limite de 5 é regra do programa — possível limitação de tela, não de negócio |
+| BR-009 | Parentesco do dependente deve ser: FI (Filho), CO (Cônjuge), IR (Irmão) ou OU (Outro) | `01-arqueologia/legado-sifap/natural-programs/CADDEPEND.NSN#L72-L84` | `BENEFICIARIO.DE PARENTESCO` | MÉDIO | DDM define domínio diferente: FI/CJ/NT/TU — divergência que pode impactar relatórios históricos |
+| BR-010 | CPF de dependente não pode ser duplicado dentro do mesmo titular (quando informado) | `01-arqueologia/legado-sifap/natural-programs/CADDEPEND.NSN#L97-L104` | `BENEFICIARIO.DB CPF-DEPENDENTE` | ALTO | Apenas quando CPF ≠ 0; dependente sem CPF pode ser cadastrado sem validação de unicidade |
+| BR-011 | Programa social não pode ser cadastrado com código já existente na base (ARQ 151) | `01-arqueologia/legado-sifap/natural-programs/CADPROG.NSN#L77-L82` | `PROGRAMA-SOCIAL.AA COD-PROGRAMA` | ALTO | Código é chave primária do arquivo de programas; documentação modernizada padroniza a referência ao DDM/FNR |
+| BR-012 | Status inicial de inclusão de programa é sempre 'A' (Ativo) | `01-arqueologia/legado-sifap/natural-programs/CADPROG.NSN#L97` | `PROGRAMA-SOCIAL.AI SIT-PROGRAMA` | MÉDIO | Não há transição de status no CADPROG; apenas outros módulos alteram status |
+| BR-013 | Operações de CADPROG aceitam apenas I (Inclusão) e C (Consulta); sem alteração/exclusão | `01-arqueologia/legado-sifap/natural-programs/CADPROG.NSN#L48-L56` | — | ALTO | Programas são imutáveis após cadastro neste módulo; alterações devem ocorrer por outro meio não identificado |
+| BR-014 | Valor base do programa é calculado: `FATOR-K = 1.00 + (FATOR-REAJ * 0.347215)`; valor gravado é `VLR-BASE * FATOR-K` | `01-arqueologia/legado-sifap/natural-programs/CADPROG.NSN#L87-L88` | `PROGRAMA-SOCIAL.BG FATOR-K`, `PROGRAMA-SOCIAL.BA VLR-BASE-INDIVIDUAL` | CRÍTICO | Constante 0.347215 sem documentação de origem normativa; fórmula introduzida em 2003 |
+| BR-015 | Tipo de programa deve ser A (Assistencial), P (Previdenciário) ou T (Trabalho) | `01-arqueologia/legado-sifap/natural-programs/CADPROG.NSN#L20` | `PROGRAMA-SOCIAL.AD TIPO-PROGRAMA` | MÉDIO | Definição de tipo impacta regras de elegibilidade e cálculo de benefício |
+| BR-016 | Dependente sem nome é rejeitado; nome é obrigatório | `01-arqueologia/legado-sifap/natural-programs/CADDEPEND.NSN#L86-L90` | `BENEFICIARIO.DC NOME-DEPENDENTE` | MÉDIO | Única validação obrigatória de dependente além do parentesco |
+| BR-017 | Data de fim de programa = 0 indica vigência indeterminada | `01-arqueologia/legado-sifap/natural-programs/CADPROG.NSN#L70` | `PROGRAMA-SOCIAL.AH DT-ENCERRAMENTO` | MÉDIO | Convenção 0 = sem prazo; no modelo relacional deve mapear para NULL |
+
+| BR-PGT-001 | Competência (AAAAMM) derivada de `*DATN` na execução do batch | `01-arqueologia/legado-sifap/natural-programs/BATCHPGT.NSN#L105, L108-L110` | — | ALTO | Sem parâmetro externo; batch assume "hoje" |
+| BR-PGT-002 | `NUM-PAGTO` é sequencial, incrementado a partir do maior já gravado | `01-arqueologia/legado-sifap/natural-programs/BATCHPGT.NSN#L171-L174, L323-L324` | `PAGAMENTO.NUM-PAGTO` | ALTO | Race condition se executado em paralelo |
+| BR-PGT-003 | Beneficiário só é processado se `STATUS = 'A'` (ativo) | `01-arqueologia/legado-sifap/natural-programs/BATCHPGT.NSN#L195-L198` | `BENEFICIARIO.STATUS` | ALTO | Demais status são ignorados silenciosamente |
 | BR-PGT-004 | Não gerar 2º pagamento na mesma competência para o mesmo CPF | `01-arqueologia/legado-sifap/natural-programs/BATCHPGT.NSN#L201-L210` | `PAGAMENTO.CPF-BENEF`, `PAGAMENTO.COMPETENCIA` | CRÍTICO | Idempotência da execução |
 | BR-PGT-005 | Programa social precisa existir e ter `STATUS-PROG = 'A'` | `01-arqueologia/legado-sifap/natural-programs/BATCHPGT.NSN#L213-L230` | `PROGRAMA-SOCIAL.STATUS-PROG` | ALTO | Inexistente = erro; inativo = ignorado |
 | BR-PGT-006 | Fator regional indexado por `COD-REGIAO` 1..25 (tabela hardcoded 27 posições) | `01-arqueologia/legado-sifap/natural-programs/BATCHPGT.NSN#L124-L150` | `BENEFICIARIO.COD-REGIAO` | CRÍTICO | Valores de 1,00 a 1,40 |
@@ -136,6 +154,9 @@ O que NÃO conta: paginação de relatório, formatação de saída, manipulaç�
 | BR-CALC-005 | Validações obrigatórias: beneficiário `STATUS='A'` e programa `STATUS-PROG='A'` | `01-arqueologia/legado-sifap/natural-programs/CALCBENF.NSN#L75-L100` | `BENEFICIARIO.STATUS`, `PROGRAMA-SOCIAL.STATUS-PROG` | CRÍTICO | Impede cálculo se inativo |
 | BR-CALC-006 | Truncamento de centavos via `(×100)/100` | `01-arqueologia/legado-sifap/natural-programs/CALCBENF.NSN#L160` | Todos valores N9.2 | CRÍTICO | [MYS-005] Perda acumulada |
 
+| ID     | Regra de Negócio                                                                        | Programa Fonte                                   | Campos DDM                                                               | Nível de Risco | Notas                                      |
+| ------ | --------------------------------------------------------------------------------------- | ------------------------------------------------ | ------------------------------------------------------------------------ | -------------- | ------------------------------------------ |
+| BR-EX-001 | Desconto total não pode exceder 30% do valor bruto, exceto descontos judiciais (tipo J) | `01-arqueologia/legado-sifap/natural-programs/CALCDSCT.NSN#L142-L148` | `PAGAMENTO.VLR-BRUTO`, `PAGAMENTO.VLR-TOTAL-DSCT`, `PAGAMENTO.TIPO-DSCT` | CRÍTICO        | Exemplo didático. Tipo 'J' = exceção legal |
 ### Par 3 · CALCDSCT — Cálculo descontos e deduções
 
 | ID | Regra de Negócio | Programa Fonte | Campos DDM | Nível de Risco | Notas |

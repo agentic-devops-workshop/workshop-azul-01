@@ -46,7 +46,7 @@ Prompt útil no Copilot Chat (cole o conteúdo de 2–3 arquivos `.NSN` no chat 
 | 1   | `BENEF` | Beneficiário | `CADBENEF.NSN`, `BENEFICIARIO.ddm` | Pessoa cadastrada em programa social do SIFAP |
 | 2   | `CADBENEF` | Cadastro de Beneficiário | `CADBENEF.NSN` | Programa de inclusão/alteração de beneficiário (ARQ 150) |
 | 3   | `CADDEPEND` | Cadastro de Dependentes | `CADDEPEND.NSN` | Programa de vinculação de dependentes ao beneficiário titular |
-| 4   | `CADPROG` | Cadastro de Programas | `CADPROG.NSN` | Programa de inclusão/consulta de programas sociais (ARQ 155) |
+| 4   | `CADPROG` | Cadastro de Programas | `CADPROG.NSN` | Programa de inclusão/consulta de programas sociais (ARQ 151) |
 | 5   | `CPF` | Cadastro de Pessoa Física | `CADBENEF.NSN#L105`, `BENEFICIARIO.ddm#L21` | Número identificador do beneficiário; validado por módulo 11 |
 | 6   | `NIS` | Número de Identificação Social | `CADBENEF.NSN#L51`, `BENEFICIARIO.ddm` | Identificador único do beneficiário nos programas sociais |
 | 7   | `STATUS` | Situação do Beneficiário | `CADBENEF.NSN#L163`, `BENEFICIARIO.ddm#L52` | A=Ativo, S=Suspenso/Idoso>75, C=Cancelado, I=Inativo, D=Desligado |
@@ -55,9 +55,9 @@ Prompt útil no Copilot Chat (cole o conteúdo de 2–3 arquivos `.NSN` no chat 
 | 10  | `PARENTESCO` | Vínculo familiar do dependente | `CADDEPEND.NSN#L72` | Domínio no programa: FI=Filho, CO=Cônjuge, IR=Irmão, OU=Outro |
 | 11  | `FATOR-K` | Fator de Correção Especial | `CADPROG.NSN#L87`, `PROGRAMA-SOCIAL.ddm#L39` | Multiplicador de valor base; não documentado; inserido em 2008 por solicitação da SENARC |
 | 12  | `FATOR-REAJ` | Fator de Reajuste | `CADPROG.NSN#L88` | Percentual de reajuste do programa; aplicado via fórmula `FATOR-K = 1.00 + (FATOR-REAJ * 0.347215)` |
-| 13  | `VLR-BASE` | Valor Base do Benefício | `CADPROG.NSN#L87`, `PROGRAMA-SOCIAL.ddm#L30` | Valor mensal calculado após aplicação do fator K; gravado no ARQ 155 |
+| 13  | `VLR-BASE` | Valor Base do Benefício | `CADPROG.NSN#L87`, `PROGRAMA-SOCIAL.ddm#L30` | Valor mensal calculado após aplicação do fator K; gravado no ARQ 151 |
 | 14  | `ARQ 150` | Arquivo/Base de Beneficiários | `CADBENEF.NSN#L9` | Base principal do SIFAP (~4,2 milhões de registros); DDM BENEFICIARIO, DBID=57 FNR=150 |
-| 15  | `ARQ 155` | Arquivo/Base de Programas Sociais | `CADPROG.NSN#L9` | Tabela paramétrica de programas; DDM PROGRAMA-SOCIAL, DBID=57 FNR=151 |
+| 15  | `ARQ 151` | Arquivo/Base de Programas Sociais | `PROGRAMA-SOCIAL.ddm` | Tabela paramétrica de programas; DDM PROGRAMA-SOCIAL, DBID=57 FNR=151 |
 | 16  | `DT-NASC` | Data de Nascimento | `CADBENEF.NSN#L126`, `BENEFICIARIO.ddm#L19` | Formato AAAAMMDD; usada para cálculo de idade e regra de status idoso |
 | 17  | `#IDADE` | Idade Calculada | `CADBENEF.NSN#L157` | Variável local; calculada como `ANO-ATUAL - ANO-NASC`; usada para definir status S |
 | 18  | `COD-REGIAO` | Código de Região | `CADBENEF.NSN#L50`, `BENEFICIARIO.ddm#L37` | 01 a 05 = regiões do Brasil + 99 = especial; influencia regionalização de benefícios |
@@ -124,9 +124,9 @@ Prompt útil no Copilot Chat (cole o conteúdo de 2–3 arquivos `.NSN` no chat 
 
 ## Observações
 
-- Anote aqui qualquer padrão de nomenclatura que o time identificou:
-- Convenções de prefixo/sufixo encontradas:
-- Termos ambíguos que precisam de validação com especialista:
+- Anote aqui qualquer padrão de nomenclatura que o time identificou: prefixo `CAD` para cadastro, `VAL` para validação, `REL` para relatórios e `BATCH` para rotinas noturnas.
+- Convenções de prefixo/sufixo encontradas: campos de data usam `DT-`, valores monetários usam `VLR-`, indicadores usam `IND-` e códigos usam `COD-`.
+- Termos ambíguos que precisam de validação com especialista: semântica de `STATUS='S'`, origem normativa do `FATOR-K` e domínio canônico de `PARENTESCO`.
 
 ---
 
